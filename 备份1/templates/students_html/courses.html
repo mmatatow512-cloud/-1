@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习课程 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .hover-scale { transition: transform 0.2s; }
+        .hover-scale:hover { transform: scale(1.02); }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            color: white;
+        }
+        .course-card {
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+        }
+        .course-card:hover {
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.45);
+            transform: translateY(-5px);
+        }
+        .action-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.4);
+        }
+        .primary-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .primary-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.4);
+        }
+        .secondary-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .secondary-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.4);
+        }
+        .danger-button {
+            background: rgba(255, 87, 34, 0.8);
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .danger-button:hover {
+            background: rgba(255, 87, 34, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(255, 87, 34, 0.4);
+        }
+        .highlight-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- 页面标题 -->
+        <div class="glass-card p-6 mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">学习课程</h1>
+            <div class="flex justify-between items-center">
+                <p class="text-white/80">我的课程列表</p>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('dashboard') }}" class="action-button px-4 py-2 font-medium flex items-center">
+                        <i class="fas fa-user-circle mr-2"></i>返回个人中心
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="action-button px-4 py-2 font-medium text-red-100 flex items-center">
+                        <i class="fas fa-sign-out-alt mr-2"></i>退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="space-y-6">
+            <!-- 消息提示 -->
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="glass-card p-4 rounded-lg">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-check-circle text-green-300"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-white">{{ message }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- 我的课程 -->
+            <div class="glass-card p-6 hover-scale">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white flex items-center">
+                        <i class="fas fa-book-open text-purple-400 mr-3"></i>我的课程
+                    </h2>
+                    <a href="{{ url_for('course_library') }}" class="primary-button px-5 py-2 font-medium flex items-center">
+                        <i class="fas fa-plus mr-2"></i>选课
+                    </a>
+                </div>
+
+                {% if enrolled_courses %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% for course in enrolled_courses %}
+                            <div class="course-card p-5">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="text-xl font-bold text-white mb-2">
+                                            <a href="{{ url_for('watch_course', course_id=course.id) }}" class="hover:text-blue-300 transition-colors">
+                                                {{ course.title }}
+                                            </a>
+                                        </h3>
+                                        <div class="flex flex-wrap gap-2 mb-3">
+                                            <span class="px-3 py-1 text-xs rounded-full bg-blue-200/30 text-blue-100">
+                                                {{ course.course_code }}
+                                            </span>
+                                            <span class="px-3 py-1 text-xs rounded-full bg-purple-200/30 text-purple-100">
+                                                {{ course.credit }}学分
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-white/70 flex items-center">
+                                            <i class="fas fa-chalkboard-teacher mr-2 text-white/50"></i>
+                                            授课老师：{{ course.teacher.username }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-wrap gap-2 mt-4">
+                                    {% if user.role == 'student' %}
+                                        <a href="{{ url_for('student_ai_quizzes', course_id=course.id) }}" class="primary-button px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center">
+                                            <i class="fas fa-robot mr-2"></i>智能测验
+                                        </a>
+                                    {% elif user.role == 'teacher' %}
+                                        <a href="{{ url_for('teacher_ai_test_management') }}" class="primary-button px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center">
+                                            <i class="fas fa-robot mr-2"></i>智能测验管理
+                                        </a>
+                                    {% endif %}
+                                    <a href="{{ url_for('watch_course', course_id=course.id) }}" class="action-button px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center">
+                                        <i class="fas fa-play-circle mr-2"></i>开始学习
+                                    </a>
+                                    <form action="{{ url_for('drop_course', course_id=course.id) }}" method="post">
+                                        <button type="submit" class="danger-button px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center">
+                                            <i class="fas fa-times-circle mr-2"></i>退课
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-12 highlight-section">
+                        <div class="w-20 h-20 bg-blue-200/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-book-reader text-blue-300 text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-3">还未选课</h3>
+                        <p class="text-white/70 mb-6">去课程库选择您感兴趣的课程开始学习吧</p>
+                        <a href="{{ url_for('course_library') }}" class="primary-button px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center mx-auto max-w-xs">
+                            <i class="fas fa-search mr-2"></i>进入课程库
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- AI智能测验 -->
+            <div class="glass-card p-6 hover-scale">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white flex items-center">
+                        <i class="fas fa-brain text-purple-400 mr-3"></i>AI智能测验
+                    </h2>
+                </div>
+                <div class="highlight-section rounded-lg p-6">
+                    <p class="text-white/80 mb-4">
+                        点击下方按钮开始AI智能测验，系统将根据您的学习情况生成个性化题目，帮助您更好地掌握课程内容。
+                    </p>
+                    <a href="{{ url_for('student_ai_quizzes') }}" class="primary-button px-6 py-3 rounded-lg font-medium transition-colors flex items-center">
+                        <i class="fas fa-play-circle mr-2"></i>开始AI智能测验
+                    </a>
+                </div>
+            </div>
+
+            <!-- 教案整理模块 -->
+            <div class="glass-card p-6 hover-scale mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white flex items-center">
+                        <i class="fas fa-file-alt text-blue-400 mr-3"></i>教案整理模块
+                    </h2>
+                </div>
+                <div class="highlight-section rounded-lg p-6">
+                    <p class="text-white/80 mb-4">
+                        输入文字内容，AI将自动帮您生成专业的PPT教案，提高教学效率。
+                    </p>
+                    <a href="{{ url_for('run_text2ppt') }}" class="primary-button px-6 py-3 rounded-lg font-medium transition-colors flex items-center">
+                        <i class="fas fa-magic mr-2"></i>智能教案整理
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

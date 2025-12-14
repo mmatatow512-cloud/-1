@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理学生 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        /* 基础样式设置 */
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        /* 玻璃态效果类 */
+        .glass-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+        }
+        /* 按钮样式 */
+        .action-button {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .danger-button {
+            backdrop-filter: blur(10px);
+            background: rgba(248, 113, 113, 0.3);
+            border: 1px solid rgba(248, 113, 113, 0.5);
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .danger-button:hover {
+            background: rgba(248, 113, 113, 0.5);
+            transform: translateY(-2px);
+        }
+        /* 消息提示 */
+        .message-info {
+            backdrop-filter: blur(10px);
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 mt-8">
+        <!-- 页面标题和操作按钮 -->
+        <div class="glass-card p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-white">管理学生</h1>
+                <div class="flex gap-3">
+                    <a href="{{ url_for('dashboard') }}" class="action-button">
+                        <i class="fa fa-arrow-left mr-1"></i> 返回个人中心
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="danger-button">
+                        <i class="fa fa-sign-out mr-1"></i> 退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 消息提示 -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="message-info mb-6">
+                        <div class="flex justify-between items-center">
+                            <span>{{ message }}</span>
+                            <button type="button" class="text-white opacity-70 hover:opacity-100">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- 学生管理区域 -->
+        <div class="glass-card p-6">
+            <div class="glass-header p-4 rounded-t-lg mb-4">
+                <h5 class="text-xl font-bold text-white">学生管理</h5>
+            </div>
+            <div class="p-6">
+                <div class="text-center py-12">
+                    <div class="mb-4 text-white/70">
+                        <i class="fa fa-users text-5xl"></i>
+                    </div>
+                    <p class="text-white/80 text-lg">管理学生页面内容</p>
+                    <div class="mt-6 text-white/70">
+                        <!-- 这里可以添加学生管理功能 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+</body>
+</html>

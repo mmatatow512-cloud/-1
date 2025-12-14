@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发布成绩 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        /* 基础样式设置 */
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        /* 玻璃态效果类 */
+        .glass-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .glass-table {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+        }
+        /* 按钮样式 */
+        .action-button {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .danger-button {
+            backdrop-filter: blur(10px);
+            background: rgba(248, 113, 113, 0.3);
+            border: 1px solid rgba(248, 113, 113, 0.5);
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .danger-button:hover {
+            background: rgba(248, 113, 113, 0.5);
+            transform: translateY(-2px);
+        }
+        .primary-button {
+            backdrop-filter: blur(10px);
+            background: rgba(59, 130, 246, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            color: white;
+            border-radius: 8px;
+            padding: 6px 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .primary-button:hover {
+            background: rgba(59, 130, 246, 0.5);
+            transform: translateY(-2px);
+        }
+        /* 成功按钮 */
+        .success-button {
+            backdrop-filter: blur(10px);
+            background: rgba(34, 197, 94, 0.3);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            color: white;
+            border-radius: 8px;
+            padding: 6px 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .success-button:hover {
+            background: rgba(34, 197, 94, 0.5);
+            transform: translateY(-2px);
+        }
+        /* 消息提示 */
+        .message-info {
+            backdrop-filter: blur(10px);
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 mt-8">
+        <!-- 页面标题和操作按钮 -->
+        <div class="glass-card p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-white">发布成绩</h1>
+                <div class="flex gap-3">
+                    <a href="{{ url_for('dashboard') }}" class="action-button">
+                        <i class="fa fa-arrow-left mr-1"></i> 返回个人中心
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="danger-button">
+                        <i class="fa fa-sign-out mr-1"></i> 退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 消息提示 -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="message-info mb-6">
+                        <div class="flex justify-between items-center">
+                            <span>{{ message }}</span>
+                            <button type="button" class="text-white opacity-70 hover:opacity-100">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- 成绩发布区域 -->
+        <div class="glass-card p-6">
+            <div class="glass-header p-4 rounded-t-lg mb-4">
+                <h5 class="text-xl font-bold text-white">AI测验成绩发布</h5>
+            </div>
+                {% if courses %}
+                    {% for course_id, course_data in course_grade_data.items() %}
+                        <div class="mb-6">
+                            <h6 class="text-lg font-semibold text-white mb-3">{{ course_data.course.title }} ({{ course_data.student_grades|length }}名学生)</h6>
+                            {% if course_data.student_grades %}
+                                <div class="overflow-x-auto">
+                                    <table class="glass-table w-full text-white">
+                                        <thead>
+                                            <tr class="glass-header">
+                                                <th class="px-6 py-3 text-left text-sm font-semibold">学生</th>
+                                                <th class="px-6 py-3 text-left text-sm font-semibold">测验名称</th>
+                                                <th class="px-6 py-3 text-left text-sm font-semibold">提交时间</th>
+                                                <th class="px-6 py-3 text-left text-sm font-semibold">得分</th>
+                                                <th class="px-6 py-3 text-left text-sm font-semibold">状态</th>
+                                                <th class="px-6 py-3 text-left text-sm font-semibold">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-white/20">
+                                            {% for student_data in course_data.student_grades %}
+                                                {% for student_quiz in student_data.quizzes %}
+                                                    <tr class="hover:bg-white/5 transition-colors">
+                                                        <td class="px-6 py-4 text-sm">{{ student_data.student.username }}</td>
+                                                        <td class="px-6 py-4 text-sm">{{ student_quiz.quiz.title }}</td>
+                                                        <td class="px-6 py-4 text-sm">{{ student_quiz.submit_time.strftime('%Y-%m-%d %H:%M') if student_quiz.submit_time else '未提交' }}</td>
+                                                        <td class="px-6 py-4 text-sm font-semibold">{{ student_quiz.total_score|round(1) }}</td>
+                                                        <td class="px-6 py-4 text-sm">
+                                                            <span class="bg-green-500/30 px-3 py-1 rounded-full text-sm">已完成</span>
+                                                        </td>
+                                                        <td class="px-6 py-4 text-sm">
+                                                            <div class="flex gap-2">
+                                                                <a href="#" class="primary-button">
+                                                                    <i class="fa fa-eye mr-1"></i> 查看详情
+                                                                </a>
+                                                                <button class="success-button">
+                                                                    <i class="fa fa-check mr-1"></i> 已发布
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="glass-card p-6 text-center">
+                                    <p class="text-white/70">该课程暂无学生成绩</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="glass-card p-8 text-center">
+                        <p class="text-white/70 text-lg">您还没有创建任何课程</p>
+                    </div>
+                {% endif %}
+        </div>
+    </div>
+    
+
+</body>
+</html>

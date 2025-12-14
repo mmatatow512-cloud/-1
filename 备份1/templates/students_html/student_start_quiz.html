@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开始测验 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        /* 基础样式设置 */
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        /* 玻璃态效果类 */
+        .glass-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        /* 选项样式 */
+        .quiz-option {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        .quiz-option.selected {
+            background: rgba(59, 130, 246, 0.4);
+            border-color: rgba(59, 130, 246, 0.6);
+        }
+        /* 计时器样式 */
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ef4444;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        /* 摄像头容器 */
+        .camera-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #camera {
+            width: 200px;
+            height: 150px;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        /* 作弊警告 */
+        .cheat-warning {
+            backdrop-filter: blur(10px);
+            background: rgba(251, 191, 36, 0.2);
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            color: #fef08a;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        /* 提交按钮 */
+        .submit-button {
+            backdrop-filter: blur(10px);
+            background: rgba(59, 130, 246, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            color: white;
+            font-size: 1.125rem;
+            font-weight: 600;
+            padding: 10px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .submit-button:hover {
+            background: rgba(59, 130, 246, 0.5);
+            transform: translateY(-2px);
+        }
+        /* 文本输入框样式 */
+        .glass-textarea {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            color: white;
+            width: 100%;
+        }
+        .glass-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 mt-8">
+        <div class="glass-card p-6">
+        <!-- 页面标题和计时器 -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <h1 class="text-3xl font-bold text-white mb-4 sm:mb-0">
+                <i class="fa fa-file-text-o mr-2"></i>{{ quiz.title }}
+            </h1>
+            <div class="flex gap-2">
+                <div class="glass-card p-4">
+                    <i class="fa fa-clock-o mr-2 text-white/80"></i>
+                    <span class="timer" id="timer">{{ quiz.time_limit }}:00</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 测验信息 -->
+        <div class="glass-card p-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="flex items-center">
+                    <span class="font-semibold text-white/90 mr-2">
+                        <i class="fa fa-book mr-1"></i>知识点：
+                    </span>
+                    <span class="text-white">{{ quiz.knowledge_points }}</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="font-semibold text-white/90 mr-2">
+                        <i class="fa fa-signal mr-1"></i>难度：
+                    </span>
+                    <span class="text-white">{{ quiz.difficulty }}</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="font-semibold text-white/90 mr-2">
+                        <i class="fa fa-clock-o mr-1"></i>时间限制：
+                    </span>
+                    <span class="text-white">{{ quiz.time_limit }}分钟</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="font-semibold text-white/90 mr-2">
+                        <i class="fa fa-shield mr-1"></i>防作弊：
+                    </span>
+                    <span class="text-white">{{ '开启' if quiz.anti_cheat else '关闭' }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 摄像头监控 -->
+        {% if quiz.anti_cheat %}
+            <div class="camera-container mb-6">
+                <div class="glass-card p-4">
+                    <h5 class="text-lg font-semibold text-white mb-3 text-center">
+                        <i class="fa fa-video-camera mr-2"></i>摄像头监考
+                    </h5>
+                    <div class="flex justify-center">
+                        <video id="camera" autoplay class="rounded-lg"></video>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <form id="quiz-form" action="{{ url_for('student_end_quiz', student_quiz_id=student_quiz_id) }}" method="post">
+            <!-- 题目列表 -->
+            {% for question in questions %}
+                <div class="glass-card p-5 mb-5">
+                    <div class="mb-4">
+                        <h5 class="text-xl font-bold text-white mb-1">
+                            <i class="fa fa-question-circle mr-2"></i>{{ loop.index }}. {{ question.content }}
+                        </h5>
+                        <p class="text-white/60">({{ question.qtype }})</p>
+                    </div>
+                    
+                    {% if question.qtype == 'single' or question.qtype == 'multiple' %}
+                        <div class="space-y-3">
+                            {% for key, value in question.parsed_options.items() %}
+                                <div class="quiz-option">
+                                    {% if question.qtype == 'single' %}
+                                        <input type="radio" name="question_{{ question.qid }}" value="{{ key }}" 
+                                               class="mr-3 accent-blue-500" style="accent-color: #93c5fd;">
+                                    {% else %}
+                                        <input type="checkbox" name="question_{{ question.qid }}" value="{{ key }}" 
+                                               class="mr-3 accent-blue-500" style="accent-color: #93c5fd;">
+                                    {% endif %}
+                                    <strong class="text-blue-300">{{ key }}.</strong> {{ value }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="mt-3">
+                            <textarea name="question_{{ question.qid }}" rows="4" 
+                                      placeholder="请输入答案..." class="glass-textarea"></textarea>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            <!-- 提交按钮 -->
+            <div class="flex justify-center mt-8 mb-4">
+                <button type="submit" class="submit-button">
+                    <i class="fa fa-paper-plane mr-2"></i>提交答案
+                </button>
+            </div>
+        </form>
+        </div>
+    </div>
+    <script>
+        // 计时器功能
+        let timeLeft = {{ quiz.time_limit }} * 60;
+        const timerElement = document.getElementById('timer');
+        
+        const timerInterval = setInterval(() => {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                // 自动提交表单
+                document.getElementById('quiz-form').submit();
+            }
+        }, 1000);
+        
+        // 选项点击事件
+        document.querySelectorAll('.quiz-option').forEach(option => {
+            option.addEventListener('click', () => {
+                const input = option.querySelector('input');
+                if (input.type === 'radio') {
+                    // 取消同组其他选项的选中状态
+                    const questionCard = option.closest('.glass-card');
+                    questionCard.querySelectorAll('.quiz-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    input.checked = true;
+                    option.classList.add('selected');
+                } else {
+                    // 复选框逻辑
+                    input.checked = !input.checked;
+                    if (input.checked) {
+                        option.classList.add('selected');
+                    } else {
+                        option.classList.remove('selected');
+                    }
+                }
+            });
+        });
+        
+        // 防作弊功能
+        {% if quiz.anti_cheat %}
+            // 摄像头监控
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    const camera = document.getElementById('camera');
+                    camera.srcObject = stream;
+                })
+                .catch(error => {
+                    console.error('摄像头访问失败:', error);
+                });
+            
+            // 切屏检测
+            let isFocused = true;
+            let cheatCount = 0;
+            
+            window.addEventListener('blur', () => {
+                isFocused = false;
+                cheatCount++;
+                showCheatWarning('检测到切屏，请注意遵守考试纪律！');
+            });
+            
+            window.addEventListener('focus', () => {
+                isFocused = true;
+            });
+            
+            // 一段时间不活跃检测
+            let inactiveTimer = 0;
+            const inactiveThreshold = 300; // 5分钟
+            
+            ['mousemove', 'keydown', 'scroll'].forEach(event => {
+                window.addEventListener(event, () => {
+                    inactiveTimer = 0;
+                });
+            });
+            
+            setInterval(() => {
+                inactiveTimer++;
+                if (inactiveTimer > inactiveThreshold && isFocused) {
+                    cheatCount++;
+                    showCheatWarning('检测到长时间不活跃，请注意遵守考试纪律！');
+                }
+            }, 1000);
+            
+            // 显示作弊警告
+            function showCheatWarning(message) {
+                const warning = document.createElement('div');
+                warning.className = 'cheat-warning';
+                warning.textContent = message;
+                document.querySelector('.page-container').insertBefore(warning, document.querySelector('.question-card'));
+                
+                // 3秒后移除警告
+                setTimeout(() => {
+                    warning.remove();
+                }, 3000);
+            }
+        {% endif %}
+    </script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建AI智能测验 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            color: white;
+        }
+        .glass-navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .glass-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .primary-button {
+            background: rgba(139, 92, 246, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .primary-button:hover {
+            background: rgba(139, 92, 246, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(139, 92, 246, 0.4);
+        }
+        .action-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.4);
+        }
+        .danger-button {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .danger-button:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(239, 68, 68, 0.4);
+        }
+        .message-info {
+            background: rgba(165, 243, 252, 0.2);
+            border: 1px solid rgba(165, 243, 252, 0.3);
+            color: white;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- 返回按钮 -->
+    <div class="container mx-auto px-4 py-6">
+        <a href="{{ url_for('teacher_ai_test_management') }}" class="action-button px-4 py-2 inline-block mb-6 flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i>返回测验管理
+        </a>
+        
+        <!-- 页面标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-3">创建AI智能测验</h1>
+            <p class="text-xl text-white/80">设置测验参数，生成智能AI测验</p>
+        </div>
+        <!-- 创建测验表单 -->
+        <div class="glass-card p-8 max-w-4xl mx-auto">
+            <form method="POST">
+                <!-- 测验名称 -->
+                <div class="mb-6">
+                    <label for="title" class="block text-white font-medium mb-2">
+                        <i class="fas fa-heading text-blue-300 mr-2"></i>测验名称
+                    </label>
+                    <input type="text" id="title" name="title" required class="glass-input w-full px-4 py-3">
+                </div>
+                
+                <!-- 关联课程 -->
+                <div class="mb-6">
+                    <label for="course_id" class="block text-white font-medium mb-2">
+                        <i class="fas fa-book text-green-300 mr-2"></i>关联课程
+                    </label>
+                    <select id="course_id" name="course_id" required class="glass-input w-full px-4 py-3">
+                        {% for course in courses %}
+                            <option value="{{ course.id }}" class="bg-purple-900 text-white">{{ course.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- 知识点范围 -->
+                <div class="mb-6">
+                    <label class="block text-white font-medium mb-2">
+                        <i class="fas fa-lightbulb text-yellow-300 mr-2"></i>知识点范围（可多选）
+                    </label>
+                    <div class="flex flex-wrap gap-6 mt-3">
+                        <label class="flex items-center text-white/90">
+                            <input type="checkbox" name="knowledge_points" value="现代设计史" class="mr-3 h-4 w-4 rounded bg-white/20 border-white/30 text-purple-500 focus:ring-purple-500">
+                            <span class="font-medium">现代设计史</span>
+                        </label>
+                        <label class="flex items-center text-white/90">
+                            <input type="checkbox" name="knowledge_points" value="造型艺术" class="mr-3 h-4 w-4 rounded bg-white/20 border-white/30 text-purple-500 focus:ring-purple-500">
+                            <span class="font-medium">造型艺术</span>
+                        </label>
+                        <label class="flex items-center text-white/90">
+                            <input type="checkbox" name="knowledge_points" value="设计思维" class="mr-3 h-4 w-4 rounded bg-white/20 border-white/30 text-purple-500 focus:ring-purple-500">
+                            <span class="font-medium">设计思维</span>
+                        </label>
+                        <label class="flex items-center text-white/90">
+                            <input type="checkbox" name="knowledge_points" value="设计基础" class="mr-3 h-4 w-4 rounded bg-white/20 border-white/30 text-purple-500 focus:ring-purple-500">
+                            <span class="font-medium">设计基础</span>
+                        </label>
+                    </div>
+                    <div class="text-white/50 text-sm mt-2">请至少选择一个知识点</div>
+                </div>
+            
+                <!-- 难度选择 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="difficulty" class="block text-white font-medium mb-2">
+                            <i class="fas fa-sliders-h text-blue-300 mr-2"></i>难度
+                        </label>
+                        <select id="difficulty" name="difficulty" required class="glass-input w-full px-4 py-3">
+                            <option value="简单" class="bg-purple-900">简单</option>
+                            <option value="中等" class="bg-purple-900">中等</option>
+                            <option value="困难" class="bg-purple-900">困难</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 时间限制 -->
+                    <div>
+                        <label for="time_limit" class="block text-white font-medium mb-2">
+                            <i class="fas fa-clock text-red-300 mr-2"></i>时间限制（分钟）
+                        </label>
+                        <input type="number" id="time_limit" name="time_limit" min="5" max="120" required value="30" class="glass-input w-full px-4 py-3">
+                    </div>
+                </div>
+                
+                <!-- 题型数量设置 -->
+                <div class="mt-8">
+                    <h3 class="text-xl font-semibold text-white mb-4 flex items-center">
+                        <i class="fas fa-list-alt text-green-300 mr-2"></i>题型数量设置
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- 单选题数量 -->
+                        <div>
+                            <label for="single_count" class="block text-white font-medium mb-2">
+                                <i class="fas fa-circle text-green-300 mr-2"></i>单选题数量
+                            </label>
+                            <input type="number" id="single_count" name="single_count" min="0" max="50" required value="5" class="glass-input w-full px-4 py-3">
+                        </div>
+                        
+                        <!-- 多选题数量 -->
+                        <div>
+                            <label for="multiple_count" class="block text-white font-medium mb-2">
+                                <i class="fas fa-check-square text-purple-300 mr-2"></i>多选题数量
+                            </label>
+                            <input type="number" id="multiple_count" name="multiple_count" min="0" max="50" required value="3" class="glass-input w-full px-4 py-3">
+                        </div>
+                        
+                        <!-- 判断题数量 -->
+                        <div>
+                            <label for="judge_count" class="block text-white font-medium mb-2">
+                                <i class="fas fa-balance-scale text-yellow-300 mr-2"></i>判断题数量
+                            </label>
+                            <input type="number" id="judge_count" name="judge_count" min="0" max="50" required value="2" class="glass-input w-full px-4 py-3">
+                        </div>
+                        
+                        <!-- 简答题数量 -->
+                        <div>
+                            <label for="short_count" class="block text-white font-medium mb-2">
+                                <i class="fas fa-pencil-alt text-blue-300 mr-2"></i>简答题数量
+                            </label>
+                            <input type="number" id="short_count" name="short_count" min="0" max="20" required value="2" class="glass-input w-full px-4 py-3">
+                        </div>
+                        
+                        <!-- 论述题数量 -->
+                        <div>
+                            <label for="discussion_count" class="block text-white font-medium mb-2">
+                                <i class="fas fa-comment-dots text-red-300 mr-2"></i>论述题数量
+                            </label>
+                            <input type="number" id="discussion_count" name="discussion_count" min="0" max="10" required value="1" class="glass-input w-full px-4 py-3">
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- 防作弊功能 -->
+                <div class="mt-8">
+                    <div class="flex items-start">
+                        <input type="checkbox" id="anti_cheat" name="anti_cheat" checked class="mr-3 mt-1 h-4 w-4 rounded bg-white/20 border-white/30 text-purple-500 focus:ring-purple-500">
+                        <div>
+                            <label for="anti_cheat" class="text-white font-medium flex items-center">
+                                <i class="fas fa-shield-alt text-red-300 ml-1 mr-2"></i>启用防作弊功能
+                            </label>
+                            <p class="text-white/70 text-sm mt-2">防作弊功能包括：屏幕切换检测、摄像头监控、标签页切换检测、5分钟无活动检测、多设备检测</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 提交按钮 -->
+                <div class="mt-10 flex justify-center">
+                    <button type="submit" class="primary-button px-8 py-3 text-lg font-medium flex items-center">
+                        <i class="fas fa-robot mr-2"></i>创建测验
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

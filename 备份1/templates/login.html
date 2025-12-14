@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .page { display: none; }
+        .page.active { display: block !important; }
+        .sub-page { display: none; }
+        .sub-page.active { display: block !important; }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border-radius: 16px;
+            color: white;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .role-btn {
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .role-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .role-btn.border-blue-500 {
+            background: rgba(100, 116, 139, 0.3);
+            border-color: rgba(147, 197, 253, 0.6);
+        }
+        
+        .role-btn.border-green-500 {
+            background: rgba(100, 116, 139, 0.3);
+            border-color: rgba(167, 243, 208, 0.6);
+        }
+        
+        .role-btn.border-purple-500 {
+            background: rgba(100, 116, 139, 0.3);
+            border-color: rgba(216, 180, 254, 0.6);
+        }
+        
+        .action-button {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        .action-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+        
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 启动页 -->
+    <div id="startup-page" class="page active min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center">
+        <div class="max-w-4xl w-full mx-4">
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold text-white mb-2">设计学科线上课程系统</h1>
+                <p class="text-blue-100 text-lg">连接创意与未来的教育平台 v2.0</p>
+            </div>
+            
+            <div class="glass-effect rounded-2xl p-8 shadow-2xl">
+                <!-- 身份选择 -->
+                <div class="mb-6">
+                    <label class="block text-white text-opacity-90 text-sm font-bold mb-3">选择身份</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="selectRole('student')" class="role-btn p-4 border-2 border-white border-opacity-30 rounded-lg transition-all">
+                            <i class="fas fa-graduation-cap text-3xl mb-2 text-blue-300"></i>
+                            <div class="font-semibold text-white">学生</div>
+                        </button>
+                        <button onclick="selectRole('teacher')" class="role-btn p-4 border-2 border-white border-opacity-30 rounded-lg transition-all">
+                            <i class="fas fa-chalkboard-teacher text-3xl mb-2 text-green-300"></i>
+                            <div class="font-semibold text-white">教师</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 登录表单 -->
+                <form id="login-form" action="{{ url_for('login_process') }}" method="post" class="space-y-4">
+                    <!-- 错误消息显示 -->
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="error-message border-l-4 border-red-400 p-4 mb-4 rounded-lg">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <i class="fas fa-exclamation-circle text-red-300"></i>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-white">{{ message }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <!-- 角色选择隐藏字段 -->
+                    <input type="hidden" id="role" name="role" value="student">
+                    
+                    <div>
+                        <input type="text" id="username" name="username" placeholder="用户名/邮箱" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                    </div>
+                    <div>
+                        <input type="password" id="password" name="password" placeholder="密码" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2 bg-white bg-opacity-20 border-white border-opacity-30 rounded focus:ring-blue-400">
+                            <span class="text-sm text-white text-opacity-80">记住我</span>
+                        </label>
+                        <a href="#" onclick="showPage('forgot-password')" class="text-sm text-blue-300 hover:underline">忘记密码？</a>
+                    </div>
+
+                    <button type="submit" form="login-form" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity action-button">
+                        登录
+                    </button>
+
+                    <div class="text-center">
+                        <span class="text-white text-opacity-80">还没有账号？</span>
+                        <a href="{{ url_for('register') }}" class="text-blue-300 hover:underline font-semibold">立即注册</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function selectRole(role) {
+            // 清除所有选中状态
+            document.querySelectorAll('.role-btn').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'bg-blue-50');
+            });
+            // 选中当前角色
+            event.target.closest('.role-btn').classList.add('border-blue-500', 'bg-blue-50');
+            // 设置角色到表单
+            document.getElementById('role').value = role;
+        }
+        
+        function showPage(pageId) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page, .sub-page').forEach(page => {
+                page.classList.remove('active');
+            });
+            // 显示目标页面
+            document.getElementById(pageId).classList.add('active');
+        }
+        
+        function login() {
+            // 提交登录表单
+            document.getElementById('login-form').submit();
+        }
+    </script>
+</body>
+</html>

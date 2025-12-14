@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI会话详情 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .chat-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .message {
+            max-width: 80%;
+        }
+        .message-time {
+            font-size: 0.75em;
+            opacity: 0.7;
+        }
+        .hover-scale { transition: transform 0.2s; }
+        .hover-scale:hover { transform: scale(1.02); }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        }
+        
+        .action-button {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .form-input {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .session-info-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .message-user {
+            background: rgba(102, 126, 234, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        
+        .message-ai {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-8">
+        <!-- 页面标题 -->
+        <div class="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-xl p-6 mb-8 shadow-lg">
+            <h1 class="text-3xl font-bold text-white mb-2">AI会话详情</h1>
+            <div class="flex justify-between items-center">
+                <p class="text-blue-100">{{ session.topic }}</p>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('ai_tutoring') }}" class="glass-card text-white hover:bg-white/20 px-4 py-2 rounded-lg font-medium transition-colors flex items-center action-button">
+                        <i class="fas fa-arrow-left mr-2"></i>返回AI助教
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="glass-card text-white hover:bg-white/20 px-4 py-2 rounded-lg font-medium transition-colors flex items-center action-button">
+                        <i class="fas fa-home mr-2"></i>返回首页
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="glass-card text-white hover:bg-white/20 px-4 py-2 rounded-lg font-medium transition-colors flex items-center action-button">
+                        <i class="fas fa-sign-out-alt mr-2"></i>退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="glass-card rounded-xl shadow-md p-6">
+            <!-- 会话信息卡片 -->
+            <div class="session-info-card rounded-lg p-4 mb-6 hover-scale">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-white">{{ session.topic }}</h3>
+                    <span class="px-3 py-1 text-sm rounded-full bg-blue-100/20 text-blue-100">
+                        {{ '课程答疑' if session.session_type == 'course' else '作业答疑' if session.session_type == 'assignment' else '综合问题' }}
+                    </span>
+                </div>
+                <p class="text-sm text-blue-100 mt-2">
+                    创建时间：{{ session.created_at.strftime('%Y-%m-%d %H:%M') }}
+                </p>
+            </div>
+
+            <!-- 聊天容器 -->
+            <div class="chat-container bg-white/10 p-6 rounded-lg mb-6 space-y-4">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="flex {{ 'justify-end' if message.sender == 'user' else 'justify-start' }}">
+                            <div class="message {{ 'message-user text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl' if message.sender == 'user' else 'message-ai text-gray-800 rounded-tl-xl rounded-tr-xl rounded-br-xl shadow-md' }}">
+                                <div class="p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-semibold text-sm">
+                                            {{ '我' if message.sender == 'user' else 'AI助教' }}
+                                        </span>
+                                        <span class="message-time text-right">{{ message.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                                    </div>
+                                    <div class="text-sm whitespace-pre-wrap">{{ message.content }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-10">
+                        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-comments text-white/50 text-2xl"></i>
+                        </div>
+                        <p class="text-white/70">暂无消息，开始与AI助教对话吧！</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- 消息输入框 -->
+            <form method="POST" action="{{ url_for('send_ai_message', session_id=session.id) }}" class="space-y-4">
+                <div class="relative">
+                    <textarea 
+                        class="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 form-input resize-none" 
+                        rows="3" 
+                        name="content" 
+                        placeholder="输入您的问题..."
+                        required
+                    ></textarea>
+                    <div class="absolute bottom-3 right-3 text-gray-500">
+                        <i class="fas fa-paperclip"></i>
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button 
+                        type="submit" 
+                        class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center hover:shadow-lg action-button"
+                    >
+                        <span>发送消息</span>
+                        <i class="fas fa-paper-plane ml-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 自动滚动到底部
+        const chatContainer = document.querySelector('.chat-container');
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    </script>
+</body>
+</html>

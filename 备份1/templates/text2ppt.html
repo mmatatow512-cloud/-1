@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能教案整理 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            color: white;
+        }
+        .glass-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .glass-textarea {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            min-height: 300px;
+        }
+        .glass-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .action-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.4);
+        }
+        .primary-button {
+            background: rgba(139, 92, 246, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .primary-button:hover {
+            background: rgba(139, 92, 246, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(139, 92, 246, 0.4);
+        }
+        .danger-button {
+            background: rgba(239, 68, 68, 0.3);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .danger-button:hover {
+            background: rgba(239, 68, 68, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(239, 68, 68, 0.4);
+        }
+        .message-info {
+            background: rgba(165, 243, 252, 0.2);
+            border: 1px solid rgba(165, 243, 252, 0.3);
+            color: white;
+            border-radius: 8px;
+        }
+        .status-container {
+            margin-top: 15px;
+        }
+        .success {
+            color: #10b981;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .loading {
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-6">
+        <!-- 页面标题和按钮组 -->
+        <div class="glass-card p-6 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <h1 class="text-3xl font-bold text-white flex items-center">
+                    <i class="fas fa-file-alt mr-3 text-blue-300"></i>智能教案整理
+                </h1>
+                <div class="flex gap-3">
+                    <a href="{{ url_for('dashboard') }}" class="action-button px-4 py-2 flex items-center">
+                        <i class="fas fa-home mr-2"></i>返回个人中心
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="danger-button px-4 py-2 flex items-center">
+                        <i class="fas fa-sign-out-alt mr-2"></i>退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 消息提示区域 -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="message-info p-4 rounded-lg mb-6 relative">
+                        {{ message }}
+                        <button type="button" class="absolute top-2 right-2 text-white opacity-70 hover:opacity-100">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- 使用说明卡片 -->
+        <div class="glass-card p-6 mb-6">
+            <div class="border-b border-white/20 pb-4 mb-4">
+                <h5 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-info-circle mr-2 text-yellow-300"></i>使用说明
+                </h5>
+            </div>
+            <ul class="space-y-2 text-white/90">
+                <li class="flex items-start"><i class="fas fa-check-circle mr-2 text-green-300 mt-1"></i>第一行为PPT封面标题</li>
+                <li class="flex items-start"><i class="fas fa-check-circle mr-2 text-green-300 mt-1"></i>第二行为PPT封面副标题</li>
+                <li class="flex items-start"><i class="fas fa-check-circle mr-2 text-green-300 mt-1"></i>使用空行分隔不同的PPT页面</li>
+                <li class="flex items-start"><i class="fas fa-check-circle mr-2 text-green-300 mt-1"></i>每个页面的第一行为该页面标题，后续行为要点内容</li>
+            </ul>
+        </div>
+        
+        <!-- PPT内容输入卡片 -->
+        <div class="glass-card p-6">
+            <div class="border-b border-white/20 pb-4 mb-4">
+                <h5 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-keyboard mr-2 text-purple-300"></i>PPT内容输入
+                </h5>
+            </div>
+            <div class="space-y-5">
+                <div>
+                    <label for="theme" class="block text-white/90 mb-2">选择PPT主题</label>
+                    <select class="glass-input w-full px-4 py-2" id="theme" name="theme">
+                        <option value="商务蓝 (Business Blue)">商务蓝</option>
+                        <option value="莫兰迪 (Morandi)">莫兰迪</option>
+                        <option value="暗黑科技 (Dark Tech)">暗黑科技</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="content" class="block text-white/90 mb-2">输入教案内容</label>
+                    <textarea class="glass-textarea w-full px-4 py-3" id="content" name="content" placeholder="请输入教案内容...
+
+示例：
+2024年人工智能发展趋势
+技术与应用的深度融合
+
+大语言模型的演进
+参数规模持续增长
+多模态能力增强
+推理成本逐渐降低
+开源模型生态日益繁荣
+
+生成式AI的商业落地
+核心领域：营销文案与图像生成
+辅助编程普及率提升
+企业内部知识库问答系统
+客户服务自动化"></textarea>
+                </div>
+                
+                <button type="button" class="primary-button w-100 py-3 flex items-center justify-center" id="generateBtn">
+                    <i class="fas fa-magic mr-2"></i>开始生成PPT
+                </button>
+                
+                <div class="status-container">
+                    <span id="status"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            const content = document.getElementById('content').value;
+            const theme = document.getElementById('theme').value;
+            const status = document.getElementById('status');
+            const btn = this;
+            
+            if (!content.trim()) {
+                status.textContent = '请输入PPT内容';
+                status.className = 'error';
+                return;
+            }
+            
+            // 禁用按钮，显示加载状态
+            btn.disabled = true;
+            btn.textContent = '正在生成PPT...';
+            status.textContent = '正在分析文本并生成PPT，请稍候...';
+            status.className = 'loading';
+            
+            // 发送请求到服务器
+            fetch('/generate_ppt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'content': content,
+                    'theme': theme
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.message || '生成失败');
+                    });
+                }
+            })
+            .then(blob => {
+                // 下载生成的PPT文件
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `presentation_${new Date().toISOString().slice(0,10)}.pptx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                // 显示成功状态
+                status.textContent = 'PPT生成成功，正在下载...';
+                status.className = 'success';
+            })
+            .catch(error => {
+                // 显示错误信息
+                status.textContent = `生成失败: ${error.message}`;
+                status.className = 'error';
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                btn.disabled = false;
+                btn.textContent = '开始生成PPT';
+            });
+        });
+    </script>
+</body>
+</html>

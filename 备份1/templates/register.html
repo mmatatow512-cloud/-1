@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .page { display: none; }
+        .page.active { display: block !important; }
+        .sub-page { display: none; }
+        .sub-page.active { display: block !important; }
+        
+        .hover-scale { transition: transform 0.2s; }
+        .hover-scale:hover { transform: scale(1.02); }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        }
+        
+        .action-button {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .form-input {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid rgba(239, 68, 68, 0.5);
+        }
+        
+        .form-label {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .form-title {
+            color: rgba(255, 255, 255, 0.95);
+        }
+        
+        .form-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 注册页 -->
+    <div id="register-page" class="page active min-h-screen flex items-center justify-center">
+        <div class="max-w-4xl w-full mx-4">
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold text-white mb-2">设计学科线上课程系统</h1>
+                <p class="text-blue-100 text-lg">连接创意与未来的教育平台 v2.0</p>
+            </div>
+            
+            <div class="glass-card rounded-2xl p-8 shadow-2xl">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold form-title">注册新用户</h2>
+                    <p class="form-subtitle">创建你的账号，开始设计学习之旅</p>
+                </div>
+
+                <!-- 注册表单 -->
+                <form id="register-form" action="{{ url_for('register_process') }}" method="post" class="space-y-4">
+                    <!-- 错误消息显示 -->
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="error-message p-4 mb-4 rounded-lg">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <i class="fas fa-exclamation-circle text-red-300"></i>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-white">{{ message }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <div>
+                        <label for="username" class="block text-sm font-medium form-label mb-1">用户名</label>
+                        <input type="text" id="username" name="username" placeholder="请输入用户名" class="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 form-input" required>
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-medium form-label mb-1">密码</label>
+                        <input type="password" id="password" name="password" placeholder="请输入密码" class="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 form-input" required>
+                    </div>
+                    
+                    <div>
+                        <label for="confirm_password" class="block text-sm font-medium form-label mb-1">确认密码</label>
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="请再次输入密码" class="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 form-input" required>
+                    </div>
+                    
+                    <div>
+                        <label for="role" class="block text-sm font-medium form-label mb-1">角色</label>
+                        <select id="role" name="role" class="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 form-input" required>
+                            <option value="student">学生</option>
+                            <option value="teacher">教师</option>
+                            <option value="ai-assistant">AI 助教</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="student_id" class="block text-sm font-medium form-label mb-1">学号/工号</label>
+                        <input type="text" id="student_id" name="student_id" placeholder="请输入学号或工号" class="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 form-input" required>
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity action-button">
+                        注册
+                    </button>
+
+                    <div class="text-center">
+                        <span class="text-blue-100">已有账号？</span>
+                        <a href="{{ url_for('login') }}" class="text-blue-300 hover:underline font-semibold">立即登录</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showPage(pageId) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page, .sub-page').forEach(page => {
+                page.classList.remove('active');
+            });
+            // 显示目标页面
+            document.getElementById(pageId).classList.add('active');
+        }
+    </script>
+</body>
+</html>

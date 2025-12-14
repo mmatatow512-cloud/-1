@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI智能测验 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            color: white;
+        }
+        .action-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.4);
+        }
+        .danger-button {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .danger-button:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(239, 68, 68, 0.4);
+        }
+        .message-info {
+            background: rgba(165, 243, 252, 0.2);
+            border: 1px solid rgba(165, 243, 252, 0.3);
+            color: white;
+            border-radius: 8px;
+        }
+        .quiz-card {
+            transition: all 0.3s ease;
+        }
+        .quiz-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px 0 rgba(31, 38, 135, 0.5);
+        }
+        .primary-button {
+            background: rgba(139, 92, 246, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .primary-button:hover {
+            background: rgba(139, 92, 246, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(139, 92, 246, 0.4);
+        }
+        .secondary-button {
+            background: rgba(148, 163, 184, 0.2);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .secondary-button:hover {
+            background: rgba(148, 163, 184, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(148, 163, 184, 0.4);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- 页面标题 -->
+        <div class="glass-card p-6 mb-8">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-white">AI智能测验</h1>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('dashboard') }}" class="action-button px-4 py-2 font-medium flex items-center">
+                        <i class="fas fa-user-circle mr-2"></i>返回个人中心
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="danger-button px-4 py-2 font-medium flex items-center">
+                        <i class="fas fa-sign-out-alt mr-2"></i>退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 消息提示区域 -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="message-info p-4 mb-6 rounded-lg flex justify-between items-center">
+                        <div class="flex items-center">
+                            <i class="fas fa-info-circle text-blue-300 mr-3"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                        <button type="button" class="text-white opacity-70 hover:opacity-100">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- 可用测验列表 -->
+        <div class="glass-card p-6">
+            <h2 class="text-2xl font-semibold text-white mb-6">可用测验</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% for quiz in quizzes %}
+                    {% set participated = false %}
+                    {% for sq in student_quizzes %}
+                        {% if sq.quiz_id == quiz.id %}
+                            {% set participated = true %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <div class="glass-card p-5 quiz-card">
+                        <h5 class="text-xl font-semibold text-white mb-2">{{ quiz.title }}</h5>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <i class="fas fa-signal text-purple-300 mr-2"></i>
+                                <span class="text-white/80">难度：{{ quiz.difficulty }}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-book text-blue-300 mr-2"></i>
+                                <span class="text-white/80"><strong>知识点：</strong>{{ quiz.knowledge_points }}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-green-300 mr-2"></i>
+                                <span class="text-white/80"><strong>时间限制：</strong>{{ quiz.time_limit }}分钟</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-shield-alt text-red-300 mr-2"></i>
+                                <span class="text-white/80"><strong>防作弊：</strong>{{ '开启' if quiz.anti_cheat else '关闭' }}</span>
+                            </div>
+                            
+                            <div class="mt-4">
+                                {% if not participated %}
+                                    <a href="{{ url_for('student_start_quiz', quiz_id=quiz.id) }}" class="primary-button px-4 py-2 font-medium flex items-center">
+                                        <i class="fas fa-play-circle mr-2"></i>开始测验
+                                    </a>
+                                {% else %}
+                                    <button class="secondary-button px-4 py-2 font-medium flex items-center" disabled>
+                                        <i class="fas fa-check-circle mr-2"></i>已参与
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

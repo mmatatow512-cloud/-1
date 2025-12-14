@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI智能分析报告结果 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            color: white;
+        }
+        .score-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .high-score {
+            background: rgba(134, 239, 172, 0.2);
+            color: #86efac;
+        }
+        .medium-score {
+            background: rgba(252, 211, 77, 0.2);
+            color: #fcd34d;
+        }
+        .low-score {
+            background: rgba(252, 165, 165, 0.2);
+            color: #fca5a5;
+        }
+        .dimension-card {
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .dimension-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(31, 38, 135, 0.3);
+        }
+        .suggestion-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .comparison-section {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .action-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.4);
+        }
+        .primary-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .primary-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.4);
+        }
+        .progress-bar {
+            height: 20px;
+            border-radius: 10px;
+            transition: width 1s ease-in-out;
+        }
+        .progress-success {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+        .progress-warning {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+        .progress-danger {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- 页面标题 -->
+        <div class="glass-card p-6 mb-8">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-white">AI智能分析报告结果</h1>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('assignments') }}" class="action-button px-4 py-2 font-medium flex items-center">
+                        <i class="fas fa-file-upload mr-2"></i>返回提交作业
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="primary-button px-4 py-2 font-medium flex items-center">
+                        <i class="fas fa-user-circle mr-2"></i>返回个人中心
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 总分显示 -->
+        <div class="score-card {% if total_score >= 85 %}high-score{% elif total_score >= 60 %}medium-score{% else %}low-score{% endif %}">
+            <h2 class="text-2xl font-bold">总分: <span class="text-5xl font-bold">{{ total_score }}</span> / 100</h2>
+            <p class="text-lg mt-2">
+                {% if total_score >= 85 %}优秀的报告！继续保持！{% elif total_score >= 60 %}良好的报告，还有改进空间。{% else %}需要进一步完善的报告。{% endif %}
+            </p>
+        </div>
+        
+        <!-- 各维度评分 -->
+        <div class="glass-card p-6 mb-8">
+            <h3 class="text-2xl font-bold text-white mb-4">各维度评分</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for score in scores %}
+                <div class="dimension-card">
+                    <div class="p-4">
+                        <h5 class="text-lg font-medium text-white mb-3">{{ score.dimension }}</h5>
+                        <div class="relative w-full h-5 bg-white/10 rounded-full overflow-hidden">
+                            <div class="progress-bar {% if score.score >= 85 %}progress-success{% elif score.score >= 60 %}progress-warning{% else %}progress-danger{% endif %}" 
+                                 style="width: {{ score.score }}%; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 5px;">
+                                <span class="text-xs font-medium">{{ score.score }}分</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- 优化建议 -->
+        <div class="glass-card p-6 mb-8">
+            <h3 class="text-2xl font-bold text-white mb-4">优化建议</h3>
+            {% if suggestions %}
+                <div class="suggestions-list space-y-3">
+                    {% for suggestion in suggestions %}
+                        <div class="suggestion-item">
+                            <p class="text-white/90 flex items-start">
+                                <i class="fas fa-lightbulb text-yellow-300 mr-2 mt-1"></i>
+                                {{ suggestion }}
+                            </p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-12 bg-white/10 rounded-lg">
+                    <div class="w-20 h-20 bg-green-200/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-check-circle text-green-300 text-3xl"></i>
+                    </div>
+                    <p class="text-green-300 text-xl font-medium">报告写得非常好，没有明显的改进建议！</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- 报告对比分析 -->
+        {% if comparison.success %}
+        <div class="glass-card p-6 mb-8">
+            <h3 class="text-2xl font-bold text-white mb-4">报告对比分析</h3>
+            <div class="space-y-4">
+                <div>
+                    <p class="text-white/90"><strong class="text-white">对比范例：</strong>{{ comparison.example.title }}</p>
+                    <p class="text-white/90"><strong class="text-white">范例关键词：</strong>{{ ', '.join(comparison.example.keywords) }}</p>
+                </div>
+                
+                <div>
+                    <h4 class="text-xl font-semibold text-white mb-3">差异分析</h4>
+                    <ul class="list-disc list-inside space-y-2 text-white/90">
+                        <li>段落数量：您的报告有{{ comparison.comparison.paragraph_count.student }}个段落，范例有{{ comparison.comparison.paragraph_count.example }}个段落</li>
+                        <li>标题结构：{% if comparison.comparison.structure.student_has_headings %}已使用标题结构{% else %}未使用标题结构（建议添加）{% endif %}</li>
+                        <li>关键词覆盖率：{{ (comparison.comparison.keyword_coverage.coverage_ratio * 100)|round(1) }}%（已覆盖：{{ ', '.join(comparison.comparison.keyword_coverage.covered_keywords) }}）</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-xl font-semibold text-white mb-3">对比建议</h4>
+                    {% if comparison.comparison.suggestions %}
+                        <div class="suggestions-list space-y-3">
+                            {% for suggestion in comparison.comparison.suggestions %}
+                                <div class="suggestion-item">
+                                    <p class="text-white/90 flex items-start">
+                                        <i class="fas fa-lightbulb text-yellow-300 mr-2 mt-1"></i>
+                                        {{ suggestion }}
+                                    </p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8 bg-white/10 rounded-lg">
+                            <div class="w-16 h-16 bg-green-200/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-check-circle text-green-300 text-2xl"></i>
+                            </div>
+                            <p class="text-green-300 font-medium">您的报告与优秀范例结构相似，继续保持！</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息列表 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border-radius: 16px;
+            color: white;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .message-item {
+            transition: transform 0.3s, box-shadow 0.3s;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .message-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .action-button {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        .action-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+        .back-button {
+            transition: all 0.3s ease;
+        }
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- 页面标题 -->
+        <div class="glass-card p-6 mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">消息列表</h1>
+            <div class="flex justify-between items-center">
+                <p class="text-white text-opacity-80">查看和管理您的消息</p>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('dashboard') }}" class="back-button bg-white bg-opacity-20 border border-white border-opacity-30 text-white hover:bg-opacity-30 px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2">
+                        <i class="fas fa-home"></i>返回个人中心
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="glass-card p-4 mb-6 rounded-lg shadow-md">
+                        <div class="flex items-center text-white">
+                            <i class="fas fa-info-circle mr-3 text-white"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% if messages %}
+            <div class="message-list space-y-6">
+                {% for message in messages %}
+                    <div class="message-item rounded-xl p-6 shadow-md">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="message-sender text-xl font-bold text-white">{{ message.sender.username }}</span>
+                            <span class="message-time text-sm text-white text-opacity-80">{{ message.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                        </div>
+                        <div class="message-content mb-4">
+                            <p class="text-white text-opacity-90">{{ message.content | truncate(150) }}</p>
+                        </div>
+                        <div class="message-actions flex gap-4">
+                            <a href="{{ url_for('message_detail', message_id=message.id) }}" class="action-button bg-white bg-opacity-20 border border-white border-opacity-30 text-white hover:bg-opacity-30 px-4 py-2 rounded-lg transition-all flex items-center gap-2">
+                                <i class="fas fa-eye"></i>查看详情
+                            </a>
+                            <form action="{{ url_for('delete_message', message_id=message.id) }}" method="POST">
+                                <button type="submit" class="action-button bg-red-300 bg-opacity-30 border border-red-300 border-opacity-50 text-white hover:bg-opacity-40 px-4 py-2 rounded-lg transition-all flex items-center gap-2" onclick="return confirm('确定要删除这条消息吗？');">
+                                    <i class="fas fa-trash"></i>删除
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="glass-card p-10 text-center">
+                <i class="fas fa-envelope-open-text text-6xl text-white text-opacity-60 mb-4"></i>
+                <p class="text-white text-xl">暂无消息</p>
+                <p class="text-white text-opacity-70 mt-2">当有新消息时，将显示在这里</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

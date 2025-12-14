@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI智能测验管理 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            color: white;
+        }
+        .glass-navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .glass-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .primary-button {
+            background: rgba(139, 92, 246, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .primary-button:hover {
+            background: rgba(139, 92, 246, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(139, 92, 246, 0.4);
+        }
+        .action-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.4);
+        }
+        .danger-button {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .danger-button:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(239, 68, 68, 0.4);
+        }
+        .message-info {
+            background: rgba(165, 243, 252, 0.2);
+            border: 1px solid rgba(165, 243, 252, 0.3);
+            color: white;
+            border-radius: 8px;
+        }
+        .glass-table {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        .glass-table th {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+        .glass-table td {
+            color: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- 返回按钮 -->
+    <div class="container mx-auto px-4 py-6">
+        <a href="{{ url_for('teacher_dashboard') }}" class="action-button px-4 py-2 inline-block mb-6 flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i>返回教师中心
+        </a>
+        
+        <!-- 页面标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-3">AI智能测验管理</h1>
+            <p class="text-xl text-white/80">管理和查看所有AI智能测验</p>
+        </div>
+        <!-- 操作按钮 -->
+        <div class="flex flex-wrap gap-4 justify-center mb-8">
+            <a href="{{ url_for('teacher_create_quiz') }}" class="primary-button px-6 py-3 font-medium flex items-center">
+                <i class="fas fa-plus mr-2"></i>创建新测验
+            </a>
+            <a href="{{ url_for('teacher_upload_question') }}" class="primary-button px-6 py-3 font-medium flex items-center">
+                <i class="fas fa-upload mr-2"></i>上传题目
+            </a>
+        </div>
+        <!-- 测验列表表格 -->
+        <div class="glass-table overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-4 text-left">测验名称</th>
+                        <th class="px-6 py-4 text-left">知识点</th>
+                        <th class="px-6 py-4 text-left">难度</th>
+                        <th class="px-6 py-4 text-left">时间限制</th>
+                        <th class="px-6 py-4 text-left">防作弊</th>
+                        <th class="px-6 py-4 text-left">创建时间</th>
+                        <th class="px-6 py-4 text-left">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quiz in quizzes %}
+                    <tr>
+                        <td class="px-6 py-4 font-medium">{{ quiz.title }}</td>
+                        <td class="px-6 py-4">{{ quiz.knowledge_points }}</td>
+                        <td class="px-6 py-4">{{ quiz.difficulty }}</td>
+                        <td class="px-6 py-4">{{ quiz.time_limit }}分钟</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full {{ 'bg-green-500/30 text-green-200' if quiz.anti_cheat else 'bg-red-500/30 text-red-200' }}">
+                                {{ "开启" if quiz.anti_cheat else "关闭" }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">{{ quiz.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-2">
+                                <a href="{{ url_for('teacher_view_quiz', quiz_id=quiz.id) }}" class="action-button px-4 py-1 text-sm flex items-center">
+                                    <i class="fas fa-eye mr-1"></i>查看详情
+                                </a>
+                                <a href="{{ url_for('teacher_view_student_answers', quiz_id=quiz.id) }}" class="action-button px-4 py-1 text-sm flex items-center">
+                                    <i class="fas fa-list-alt mr-1"></i>学生答题
+                                </a>
+                                <form action="{{ url_for('teacher_delete_quiz', quiz_id=quiz.id) }}" method="POST" class="inline">
+                                    <button type="submit" class="danger-button px-4 py-1 text-sm flex items-center" onclick="return confirm('确定要删除该测验吗？删除后将无法恢复，包括所有学生答题记录。')">
+                                        <i class="fas fa-trash-alt mr-1"></i>删除测验
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- 空状态提示 -->
+        {% if not quizzes %}
+        <div class="glass-card p-8 text-center mt-8">
+            <i class="fas fa-robot text-6xl text-white/50 mb-4"></i>
+            <h3 class="text-xl font-semibold text-white mb-2">暂无测验</h3>
+            <p class="text-white/70 mb-6">点击"创建新测验"开始创建您的第一个AI智能测验。</p>
+            <a href="{{ url_for('teacher_create_quiz') }}" class="primary-button px-6 py-3 inline-block">
+                <i class="fas fa-plus mr-2"></i>创建新测验
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

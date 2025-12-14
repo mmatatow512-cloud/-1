@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI助教答疑 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border-radius: 16px;
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+        }
+        .btn-primary {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .btn-danger {
+            background: rgba(255, 87, 34, 0.2);
+            border: 1px solid rgba(255, 87, 34, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-danger:hover {
+            background: rgba(255, 87, 34, 0.3);
+        }
+        .session-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        .session-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        option {
+            background-color: #764ba2;
+            color: white;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-5xl glass-card p-6 md:p-8">
+        <!-- 页面标题和操作按钮 -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <h1 class="text-3xl font-bold text-white">AI助教答疑</h1>
+            <div class="flex gap-3">
+                <a href="{{ url_for('dashboard') }}" class="btn-secondary px-4 py-2 rounded-lg flex items-center gap-2">
+                    <i class="fa fa-home"></i> 返回首页
+                </a>
+                <a href="{{ url_for('logout') }}" class="btn-danger px-4 py-2 rounded-lg flex items-center gap-2">
+                    <i class="fa fa-sign-out"></i> 退出登录
+                </a>
+            </div>
+        </div>
+        
+        <!-- 消息提示 -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="bg-blue-500 bg-opacity-20 border border-blue-400 text-white px-4 py-3 rounded-lg mb-6 relative" role="alert">
+                        <span>{{ message }}</span>
+                        <button type="button" class="absolute top-2 right-2 text-white opacity-70 hover:opacity-100" onclick="this.parentElement.remove()">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- 创建新会话卡片 -->
+        <div class="glass-card p-6 mb-6">
+            <h2 class="text-xl font-semibold text-white mb-4">创建新的答疑会话</h2>
+            <form method="POST" action="{{ url_for('create_ai_session') }}">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="session_type" class="block text-white text-sm font-medium mb-2">会话类型</label>
+                        <select class="form-input w-full px-4 py-3 rounded-lg" id="session_type" name="session_type" required>
+                            <option value="course">课程答疑</option>
+                            <option value="assignment">作业答疑</option>
+                            <option value="general">综合问题</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="topic" class="block text-white text-sm font-medium mb-2">主题</label>
+                        <input type="text" class="form-input w-full px-4 py-3 rounded-lg" id="topic" name="topic" placeholder="输入会话主题" required>
+                    </div>
+                    <div>
+                        <label for="course_id" class="block text-white text-sm font-medium mb-2">相关课程（可选）</label>
+                        <select class="form-input w-full px-4 py-3 rounded-lg" id="course_id" name="course_id">
+                            <option value="">无</option>
+                            {% for course in user.enrolled_courses %}
+                                <option value="{{ course.course.id }}">{{ course.course.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn-primary px-6 py-3 rounded-lg font-medium hover:shadow-lg transition-all">
+                        <i class="fa fa-comments mr-2"></i> 开始会话
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- 历史会话列表 -->
+        <div class="glass-card p-6">
+            <h2 class="text-xl font-semibold text-white mb-4">历史会话</h2>
+            {% if sessions %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for session in sessions %}
+                        <div class="session-card p-4">
+                            <h3 class="text-lg font-medium text-white mb-2">{{ session.topic }}</h3>
+                            <p class="text-white text-opacity-70 text-sm">
+                                类型：{{ '课程答疑' if session.session_type == 'course' else '作业答疑' if session.session_type == 'assignment' else '综合问题' }} | 
+                                创建时间：{{ session.created_at.strftime('%Y-%m-%d %H:%M') }}
+                            </p>
+                            <div class="mt-3">
+                                <a href="{{ url_for('ai_session_detail', session_id=session.id) }}" class="btn-primary px-4 py-2 rounded-lg text-sm flex items-center gap-1 hover:shadow-md transition-all">
+                                    <i class="fa fa-eye"></i> 查看会话
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-white text-opacity-70 text-center py-4">暂无历史会话</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

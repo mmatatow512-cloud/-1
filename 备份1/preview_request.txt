@@ -1,0 +1,17 @@
+请您指定要预览的具体文件名，以下是目录中的主要文件：
+
+根目录文件：
+- AI_test_system.py
+- app.py
+- design_course_system_v2.html
+- requirements.txt
+
+模板文件（位于templates/）：
+- 学生相关HTML文件（students_html/）
+- 教师相关HTML文件（teacher_html/）
+- 其他通用HTML文件
+
+课程文件（位于course_files/）：
+- 视频文件等
+
+请告诉我您想预览的具体文件名或路径。

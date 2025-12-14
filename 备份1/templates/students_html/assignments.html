@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提交作业 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hover-scale { transition: transform 0.2s; }
+        .hover-scale:hover { transform: scale(1.02); }
+        .file-upload { position: relative; overflow: hidden; }
+        .file-upload input[type=file] { position: absolute; top: 0; right: 0; min-width: 100%; min-height: 100%; opacity: 0; cursor: pointer; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- 页面标题 -->
+        <div class="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 rounded-xl p-6 mb-8 shadow-lg">
+            <h1 class="text-3xl font-bold text-white mb-2">提交作业</h1>
+            <div class="flex justify-between items-center">
+                <p class="text-blue-100">作业提交与报告分析</p>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('dashboard') }}" class="bg-white text-purple-600 hover:bg-gray-100 px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
+                        <i class="fas fa-user-circle mr-2"></i>返回个人中心
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="bg-white text-purple-600 hover:bg-gray-100 px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
+                        <i class="fas fa-sign-out-alt mr-2"></i>退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="space-y-6">
+            <!-- 消息提示 -->
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg shadow-md">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-check-circle text-green-500"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-green-700">{{ message }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- 待提交作业 -->
+            <div class="bg-white rounded-xl shadow-md p-6 hover-scale">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-file-alt text-purple-600 mr-3"></i>待提交作业
+                    </h2>
+                </div>
+
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-8 border border-blue-100 text-center">
+                    <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-pen-fancy text-blue-500 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">提交作业页面</h3>
+                    <p class="text-gray-600 mb-6">在此页面可以提交您的课程作业，系统将记录您的提交时间和作业内容。</p>
+                    <!-- 这里可以添加作业提交表单 -->
+                    <button class="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center mx-auto shadow-md">
+                        <i class="fas fa-plus mr-2"></i>创建新作业
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI智能分析报告 -->
+            <div class="bg-white rounded-xl shadow-md p-6 hover-scale">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-brain text-purple-600 mr-3"></i>AI智能分析报告
+                    </h2>
+                </div>
+
+                <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-6 border border-purple-100">
+                    <p class="text-gray-700 mb-6">
+                        上传你的报告，获取AI智能分析和优化建议，帮助你提升报告质量。
+                    </p>
+                    <form action="{{ url_for('upload_report') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                        <div class="file-upload bg-white rounded-lg border-2 border-dashed border-gray-300 p-10 text-center hover:border-blue-500 transition-colors">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-cloud-upload-alt text-gray-400 text-2xl"></i>
+                            </div>
+                            <input type="file" id="reportFile" name="report_file" accept=".doc,.docx,.pdf,.md,.txt" required>
+                            <label for="reportFile" class="cursor-pointer block text-blue-600 font-medium hover:text-blue-800 transition-colors">
+                                <i class="fas fa-file-import mr-2"></i>点击上传报告文件
+                            </label>
+                            <p class="text-xs text-gray-500 mt-2">支持的格式：.doc, .docx, .pdf, .md, .txt</p>
+                        </div>
+                        <div class="flex justify-center">
+                            <button type="submit" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 px-8 py-3 rounded-lg font-medium transition-colors flex items-center shadow-md">
+                                <i class="fas fa-robot mr-2"></i>获取AI分析
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

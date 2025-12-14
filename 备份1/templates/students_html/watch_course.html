@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ course.title }} - 观看教学视频 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        /* 基础样式设置 */
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        /* 玻璃态效果类 */
+        .glass-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        /* 按钮样式 */
+        .action-button {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .danger-button {
+            backdrop-filter: blur(10px);
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .danger-button:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: translateY(-2px);
+        }
+        /* 视频容器 */
+        .video-container {
+            width: 100%;
+            height: 450px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        /* 课程信息 */
+        .course-info {
+            padding: 20px;
+            height: 450px;
+            overflow-y: auto;
+            color: white;
+        }
+        .course-info-item {
+            margin-bottom: 15px;
+        }
+        .course-info-label {
+            font-weight: bold;
+            display: block;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 5px;
+        }
+        /* 消息提示 */
+        .message-info {
+            backdrop-filter: blur(10px);
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            color: #bfdbfe;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 mt-8">
+        <!-- 页面标题和导航 -->
+        <div class="glass-card p-6 mb-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                <h1 class="text-3xl font-bold text-white mb-4 sm:mb-0">
+                    <i class="fa fa-play-circle mr-2"></i>{{ course.title }}
+                </h1>
+                <div class="flex gap-3">
+                    <a href="{{ url_for('courses') }}" class="action-button">
+                        <i class="fa fa-arrow-left mr-1"></i> 返回我的课程
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="action-button">
+                        <i class="fa fa-home mr-1"></i> 返回个人中心
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="danger-button">
+                        <i class="fa fa-sign-out mr-1"></i> 退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 消息提示 -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="message-info mb-6">
+                        <i class="fa fa-info-circle mr-2"></i>{{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- 内容区域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 左半部分：视频播放器 -->
+            <div class="lg:col-span-2">
+                <div class="glass-card p-6">
+                    <div class="flex items-center mb-4">
+                        <i class="fa fa-film text-white text-xl mr-2"></i>
+                        <h2 class="text-xl font-bold text-white">教学视频</h2>
+                    </div>
+                    <div class="video-container">
+                        {% if course.video_path %}
+                            <!-- 这里假设视频文件是直接可访问的，实际项目中可能需要配置静态文件路径或流媒体服务 -->
+                            <video controls class="w-full h-full">
+                                <source src="/{{ course.video_path }}" type="video/mp4">
+                                您的浏览器不支持HTML5视频播放
+                            </video>
+                        {% else %}
+                            <div class="flex justify-center items-center h-100 text-white">
+                                <i class="fa fa-video-camera-slash text-5xl text-white/50 mb-4 block"></i>
+                                <p class="text-lg">本课程暂无教学视频</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右半部分：课程信息 -->
+            <div class="lg:col-span-1">
+                <div class="glass-card p-6">
+                    <div class="flex items-center mb-4">
+                        <i class="fa fa-info-circle text-white text-xl mr-2"></i>
+                        <h2 class="text-xl font-bold text-white">课程信息</h2>
+                    </div>
+                    <div class="course-info">
+                        <div class="course-info-item">
+                            <span class="course-info-label">课程代码</span>
+                            <span class="text-white">{{ course.course_code }}</span>
+                        </div>
+                        <div class="course-info-item">
+                            <span class="course-info-label">课程标题</span>
+                            <span class="text-white">{{ course.title }}</span>
+                        </div>
+                        <div class="course-info-item">
+                            <span class="course-info-label">授课老师</span>
+                            <span class="text-white">{{ course.teacher.username }}</span>
+                        </div>
+                        <div class="course-info-item">
+                            <span class="course-info-label">学分</span>
+                            <span class="text-white">{{ course.credit }}</span>
+                        </div>
+                        <div class="course-info-item">
+                            <span class="course-info-label">课程简介</span>
+                            <p class="text-white/90">{{ course.description or '暂无课程简介' }}</p>
+                        </div>
+                        <div class="course-info-item">
+                            <span class="course-info-label">创建时间</span>
+                            <span class="text-white">{{ course.created_at.strftime('%Y-%m-%d') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

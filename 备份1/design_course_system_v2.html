@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设计学科双端线上课程系统 - 完整版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .page { display: none; }
+        .page.active { display: block !important; }
+        .sub-page { display: none; }
+        .sub-page.active { display: block !important; }
+        #student-container, #teacher-container { display: none; }
+        #student-container.active, #teacher-container.active { display: block !important; }
+        
+        .sidebar-collapsed { width: 60px !important; }
+        .sidebar-collapsed .sidebar-text { display: none; }
+        
+        .progress-ring { transform: rotate(-90deg); }
+        .chat-message { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hover-scale { transition: transform 0.2s; }
+        .hover-scale:hover { transform: scale(1.02); }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .breadcrumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .action-button {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 启动页 -->
+    <div id="startup-page" class="page active min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center">
+        <div class="max-w-4xl w-full mx-4">
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold text-white mb-2">设计学科线上课程系统</h1>
+                <p class="text-blue-100 text-lg">连接创意与未来的教育平台 v2.0</p>
+            </div>
+            
+            <div class="glass-effect rounded-2xl p-8 shadow-2xl">
+                <!-- 身份选择 -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-3">选择身份</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="selectRole('student')" class="role-btn p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all">
+                            <i class="fas fa-graduation-cap text-3xl mb-2 text-blue-600"></i>
+                            <div class="font-semibold">学生</div>
+                        </button>
+                        <button onclick="selectRole('teacher')" class="role-btn p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all">
+                            <i class="fas fa-chalkboard-teacher text-3xl mb-2 text-green-600"></i>
+                            <div class="font-semibold">教师</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 登录表单 -->
+                <div class="space-y-4">
+                    <div>
+                        <input type="text" id="username" placeholder="用户名/邮箱" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <input type="password" id="password" placeholder="密码" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2">
+                            <span class="text-sm text-gray-600">记住我</span>
+                        </label>
+                        <a href="#" onclick="showPage('forgot-password')" class="text-sm text-blue-600 hover:underline">忘记密码？</a>
+                    </div>
+
+                    <button onclick="login()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity action-button">
+                        登录
+                    </button>
+
+                    <div class="flex items-center space-x-4">
+                        <button class="flex-1 flex items-center justify-center py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            <i class="fas fa-video mr-2 text-red-500"></i>
+                            人脸识别登录
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <span class="text-gray-600">还没有账号？</span>
+                        <a href="#" onclick="showPage('register')" class="text-blue-600 hover:underline font-semibold">立即注册</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 学生端主容器 -->
+    <div id="student-container" class="page hidden">
+        <!-- 侧边栏 -->
+        <div id="student-sidebar" class="fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-40 transition-all duration-300">
+            <div class="p-4 border-b bg-gradient-to-r from-blue-600 to-purple-600">
+                <h2 class="text-xl font-bold text-white">学生端</h2>
+                <button onclick="toggleSidebar('student-sidebar')" class="absolute top-4 right-2 text-white">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <nav class="p-4">
+                <div class="space-y-2">
+                    <a href="#" onclick="showPage('student-dashboard')" class="nav-item flex items-center p-3 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-home w-5 mr-3 text-blue-600"></i>
+                        <span class="sidebar-text">首页</span>
+                    </a>
+                    <a href="#" onclick="showPage('my-courses')" class="nav-item flex items-center p-3 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-book w-5 mr-3 text-green-600"></i>
+                        <span class="sidebar-text">我的课程</span>
+                    </a>
+                    <a href="#" onclick="showPage('assignments')" class="nav-item flex items-center p-3 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-tasks w-5 mr-3 text-orange-600"></i>
+                        <span class="sidebar-text">作业列表</span>
+                    </a>
+                    <a href="#" onclick="showPage('portfolio')" class="nav-item flex items-center p-3 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-palette w-5 mr-3 text-purple-600"></i>
+                        <span class="sidebar-text">作品库</span>
+                    </a>
+                    <a href="#" onclick="showPage('competitions')" class="nav-item flex items-center p-3 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-trophy w-5 mr-3 text-yellow-600"></i>
+                        <span class="sidebar-text">竞赛实习</span>
+                    </a>
+                    <a href="#" onclick="showPage('my-class')" class="nav-item flex items-center p-3 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-users w-5 mr-3 text-indigo-600"></i>
+                        <span class="sidebar-text">我的班级</span>
+                    </a>
+                    <a href="#" onclick="showPage('group-room')" class="nav-item flex items-center p-3 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-users-cog w-5 mr-3 text-pink-600"></i>
+                        <span class="sidebar-text">小组项目室</span>
+                    </a>
+                </div>
+            </nav>
+            <div class="absolute bottom-4 left-4 right-4">
+                <button onclick="logout()" class="w-full py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    <span class="sidebar-text">退出登录</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content ml-64">
+            <!-- 学生首页 -->
+            <div id="student-dashboard" class="page active">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">学习概览</h1>
+                    <p class="text-gray-600">欢迎回来，继续你的设计学习之旅</p>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md hover-scale">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-chart-pie text-blue-600"></i>
+                            </div>
+                            <span class="text-sm text-green-600 font-semibold">+12%</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">78%</h3>
+                        <p class="text-gray-600">总体进度</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-md hover-scale">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-book-open text-green-600"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">本周</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">12</h3>
+                        <p class="text-gray-600">已学课程</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-md hover-scale">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-check-circle text-orange-600"></i>
+                            </div>
+                            <span class="text-sm text-red-600">3 待提交</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">8</h3>
+                        <p class="text-gray-600">作业完成</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-md hover-scale">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-award text-purple-600"></i>
+                            </div>
+                            <span class="text-sm text-green-600">新获得</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">15</h3>
+                        <p class="text-gray-600">作品成就</p>
+                    </div>
+                </div>
+
+                <!-- 快捷入口 -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">快捷入口</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <button onclick="showPage('my-courses')" class="action-button p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all">
+                            <i class="fas fa-book text-2xl mb-2 text-blue-600"></i>
+                            <div class="text-sm">我的课程</div>
+                        </button>
+                        <button onclick="showPage('assignments')" class="action-button p-4 border border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all">
+                            <i class="fas fa-tasks text-2xl mb-2 text-orange-600"></i>
+                            <div class="text-sm">作业</div>
+                        </button>
+                        <button onclick="showPage('portfolio')" class="action-button p-4 border border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all">
+                            <i class="fas fa-palette text-2xl mb-2 text-purple-600"></i>
+                            <div class="text-sm">作品库</div>
+                        </button>
+                        <button onclick="showPage('competitions')" class="action-button p-4 border border-gray-200 rounded-lg hover:border-yellow-500 hover:bg-yellow-50 transition-all">
+                            <i class="fas fa-trophy text-2xl mb-2 text-yellow-600"></i>
+                            <div class="text-sm">竞赛通知</div>
+                        </button>
+                        <button onclick="showPage('my-class')" class="action-button p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-all">
+                            <i class="fas fa-users text-2xl mb-2 text-indigo-600"></i>
+                            <div class="text-sm">我的班级</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI推荐 -->
+                <div class="bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-magic mr-2 text-purple-600"></i>AI 推荐课程
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white p-4 rounded-lg">
+                            <div class="flex items-start space-x-3">
+                                <img src="https://via.placeholder.com/80x60" alt="课程" class="w-20 h-15 object-cover rounded">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-gray-800">高级版式设计技巧</h3>
+                                    <p class="text-sm text-gray-600 mb-2">基于你的学习进度推荐</p>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">匹配度 95%</span>
+                                        <button onclick="showSubPage('course-detail', 'my-courses')" class="text-blue-600 hover:text-blue-800 text-sm">查看详情 →</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg">
+                            <div class="flex items-start space-x-3">
+                                <img src="https://via.placeholder.com/80x60" alt="案例" class="w-20 h-15 object-cover rounded">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-gray-800">品牌设计案例分析</h3>
+                                    <p class="text-sm text-gray-600 mb-2">行业实战案例精选</p>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">热门推荐</span>
+                                        <button onclick="showSubPage('case-study', 'my-courses')" class="text-blue-600 hover:text-blue-800 text-sm">查看案例 →</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 我的课程页 -->
+            <div id="my-courses" class="page">
+                <!-- 主要内容容器 -->
+                <div class="my-courses-main">
+                    <div class="breadcrumb">
+                        <span class="text-white/80">首页</span>
+                        <i class="fas fa-chevron-right mx-2 text-white/60"></i>
+                        <span>我的课程</span>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold text-gray-800 mb-2">我的课程</h1>
+                        <p class="text-gray-600">管理你的学习进度，探索更多设计技能</p>
+                    </div>
+
+                    <!-- 课程分类 -->
+                    <div class="flex space-x-4 mb-6">
+                        <button onclick="filterCourses('tools')" class="category-btn px-4 py-2 bg-blue-600 text-white rounded-lg">工具实操课</button>
+                        <button onclick="filterCourses('project')" class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">项目式课程</button>
+                        <button onclick="filterCourses('theory')" class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">理论课程</button>
+                    </div>
+
+                    <!-- AI辅助功能 -->
+                    <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex space-x-4">
+                                <button onclick="showSubPage('error-notebook', 'my-courses')" class="action-button px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+                                    <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>AI智能纠错
+                                </button>
+                                <button onclick="showSubPage('ai-quiz', 'my-courses')" class="action-button px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+                                    <i class="fas fa-clipboard-check text-green-500 mr-2"></i>AI测验
+                                </button>
+                                <button onclick="showStudyPlan()" class="action-button px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+                                    <i class="fas fa-list-ul text-blue-500 mr-2"></i>学案整理
+                                </button>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 课程列表 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="course-list">
+                        <!-- 课程卡片1 -->
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden hover-scale">
+                            <div class="relative">
+                                <img src="https://via.placeholder.com/300x180" alt="课程封面" class="w-full h-48 object-cover">
+                                <span class="absolute top-4 right-4 bg-green-500 text-white px-2 py-1 rounded text-sm">进行中</span>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="font-bold text-lg text-gray-800 mb-2">Photoshop高级修图技巧</h3>
+                                <div class="mb-3">
+                                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                        <span>学习进度</span>
+                                        <span>75%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-600 h-2 rounded-full" style="width: 75%"></div>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button onclick="showSubPage('course-player', 'my-courses')" class="flex-1 px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                                        继续学习
+                                    </button>
+                                    <button onclick="showSubPage('course-materials', 'my-courses')" class="px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50">
+                                        课件
+                                    </button>
+                                    <button onclick="showSubPage('case-library', 'my-courses')" class="px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50">
+                                        案例
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 课程卡片2 -->
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden hover-scale">
+                            <div class="relative">
+                                <img src="https://via.placeholder.com/300x180" alt="课程封面" class="w-full h-48 object-cover">
+                                <span class="absolute top-4 right-4 bg-orange-500 text-white px-2 py-1 rounded text-sm">未开始</span>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="font-bold text-lg text-gray-800 mb-2">Figma界面设计实战</h3>
+                                <div class="mb-3">
+                                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                        <span>学习进度</span>
+                                        <span>0%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button onclick="enrollCourse()" class="flex-1 px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+                                        选课
+                                    </button>
+                                    <button class="px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50">
+                                        详情
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 子页面容器 -->
+                <div id="my-courses-subpages">
+                    <!-- 课程播放页 -->
+                    <div id="course-player" class="sub-page">
+                        <div class="bg-white rounded-lg shadow-lg">
+                            <div class="p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h2 class="text-2xl font-bold text-gray-800">Photoshop高级修图技巧</h2>
+                                    <button onclick="closeSubPage('my-courses')" class="text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-times text-xl"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- 视频播放区域 -->
+                                <div class="bg-black rounded-lg overflow-hidden mb-6" style="height: 500px;">
+                                    <div class="h-full flex items-center justify-center text-white">
+                                        <div class="text-center">
+                                            <i class="fas fa-play-circle text-6xl mb-4"></i>
+                                            <p>课程视频播放器</p>
+                                            <p class="text-sm text-gray-400">支持倍速、全屏、字幕等功能</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 课程控制 -->
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                    <div class="bg-gray-50 p-4 rounded-lg">
+                                        <h3 class="font-semibold mb-2">
+                                            <i class="fas fa-keyboard text-blue-500 mr-2"></i>快捷键速查
+                                        </h3>
+                                        <div class="text-sm space-y-1">
+                                            <p><kbd>Ctrl + Z</kbd> - 撤销</p>
+                                            <p><kbd>Ctrl + S</kbd> - 保存</p>
+                                            <p><kbd>Space</kbd> - 暂停/播放</p>
+                                        </div>
+                                        <button onclick="showSubPage('shortcut-keys', 'course-player')" class="text-blue-600 hover:text-blue-800 text-sm mt-2">查看全部 →</button>
+                                    </div>
+                                    
+                                    <div class="bg-gray-50 p-4 rounded-lg">
+                                        <h3 class="font-semibold mb-2">
+                                            <i class="fas fa-sticky-note text-yellow-500 mr-2"></i>课堂笔记
+                                        </h3>
+                                        <textarea placeholder="记录重要知识点..." class="w-full p-2 border rounded text-sm" rows="3"></textarea>
+                                        <div class="flex space-x-2 mt-2">
+                                            <button class="text-blue-600 hover:text-blue-800 text-sm">保存笔记</button>
+                                            <button class="text-blue-600 hover:text-blue-800 text-sm">导出</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bg-gray-50 p-4 rounded-lg">
+                                        <h3 class="font-semibold mb-2">
+                                            <i class="fas fa-palette text-purple-500 mr-2"></i>AI设计助手
+                                        </h3>
+                                        <p class="text-sm text-gray-600 mb-2">智能配色和排版建议</p>
+                                        <button onclick="showSubPage('ai-design-tools', 'course-player')" class="text-purple-600 hover:text-purple-800 text-sm">开启助手 →</button>
+                                    </div>
+                                </div>
+
+                                <!-- 课程章节列表 -->
+                                <div class="border-t pt-4">
+                                    <h3 class="font-semibold mb-3">课程章节</h3>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                                            <i class="fas fa-play-circle text-blue-600 mr-3"></i>
+                                            <span class="flex-1">第1章：PS基础工具介绍</span>
+                                            <span class="text-sm text-gray-600">15:30</span>
+                                        </div>
+                                        <div class="flex items-center p-3 hover:bg-gray-50 rounded-lg">
+                                            <i class="far fa-circle text-gray-400 mr-3"></i>
+                                            <span class="flex-1">第2章：图层高级操作</span>
+                                            <span class="text-sm text-gray-600">20:15</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 错题本页 -->
+                    <div id="error-notebook" class="sub-page">
+                        <div class="bg-white rounded-lg shadow-lg">
+                            <div class="p-6">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h2 class="text-2xl font-bold text-gray-800">
+                                        <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>AI智能纠错 - 错题本
+                                    </h2>
+                                    <button onclick="closeSubPage('my-courses')" class="text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-times text-xl"></i>
+                                    </button>
+                                </div>
+
+                                <!-- 统计信息 -->
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                    <div class="bg-red-50 p-4 rounded-lg text-center">
+                                        <div class="text-2xl font-bold text-red-600">8</div>
+                                        <p class="text-sm text-gray-600">待纠正错误</p>
+                                    </div>
+                                    <div class="bg-green-50 p-4 rounded-lg text-center">
+                                        <div class="text-2xl font-bold text-green-600">15</div>
+                                        <p class="text-sm text-gray-600">已纠正</p>
+                                    </div>
+                                    <div class="bg-blue-50 p-4 rounded-lg text-center">
+                                        <div class="text-2xl font-bold text-blue-600">65%</div>
+                                        <p class="text-sm text-gray-600">纠正率</p>
+                                    </div>
+                                    <div class="bg-purple-50 p-4 rounded-lg text-center">
+                                        <div class="text-2xl font-bold text-purple-600">12</div>
+                                        <p class="text-sm text-gray-600">知识点薄弱</p>
+                                    </div>
+                                </div>
+
+                                <!-- 错误列表 -->
+                                <div class="space-y-4">
+                                    <div class="border rounded-lg p-4">
+                                        <div class="flex justify-between items-start mb-3">
+                                            <div>
+                                                <h3 class="font-semibold text-gray-800">色彩搭配错误</h3>
+                                                <p class="text-sm text-gray-600">来源：品牌设计课程作业</p>
+                                            </div>
+                                            <span class="bg-red-100 text-red-600 px-2 py-1 rounded text-sm">高频错误</span>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <h4 class="text-sm font-semibold text-gray-700 mb-2">错误示例</h4>
+                                                <div class="bg-gray-50 p-3 rounded">
+                                                    <img src="https://via.placeholder.com/200x100" alt="错误示例" class="w-full h-24 object-cover rounded">
+                                                    <p class="text-sm text-gray-600 mt-2">对比度过低，色彩不协调</p>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h4 class="text-sm font-semibold text-gray-700 mb-2">AI建议</h4>
+                                                <div class="bg-blue-50 p-3 rounded">
+                                                    <ul class="text-sm text-gray-700 space-y-1">
+                                                        <li>• 增加主色调饱和度</li>
+                                                        <li>• 调整背景与前景对比度</li>
+                                                        <li>• 使用色彩理论进行重新配色</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex space-x-2 mt-4">
+                                            <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">查看详细教程</button>
+                                            <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">标记已掌握</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI测验页 -->
+                    <div id="ai-quiz" class="sub-page">
+                        <div class="bg-white rounded-lg shadow-lg">
+                            <div class="p-6">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h2 class="text-2xl font-bold text-gray-800">
+                                        <i class="fas fa-clipboard-check text-green-500 mr-2"></i>AI智能测验
+                                    </h2>
+                                    <button onclick="closeSubPage('my-courses')" class="text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-times text-xl"></i>
+                                    </button>
+                                </div>
+
+                                <!-- 测验设置 -->
+                                <div class="bg-blue-50 p-4 rounded-lg mb-6">
+                                    <h3 class="font-semibold mb-3">测验设置</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">选择课程</label>
+                                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                <option>Photoshop高级修图技巧</option>
+                                                <option>Figma界面设计实战</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">题目类型</label>
+                                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                <option>混合题型</option>
+                                                <option>单选题</option>
+                                                <option>多选题</option>
+                                                <option>简答题</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">题目数量</label>
+                                            <input type="number" value="10" min="5" max="30" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                        </div>
+                                    </div>
+                                    <button onclick="generateQuiz()" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                        <i class="fas fa-magic mr-2"></i>AI生成测验
+                                    </button>
+                                </div>
+
+                                <!-- 测验内容 -->
+                                <div id="quiz-content" class="space-y-6">
+                                    <div class="border rounded-lg p-6">
+                                        <div class="flex justify-between items-center mb-4">
+                                            <h3 class="text-lg font-semibold">问题 1/10</h3>
+                                            <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-sm">单选题</span>
+                                        </div>
+                                        <p class="mb-4">在Photoshop中，以下哪个快捷键用于撤销上一步操作？</p>
+                                        <div class="space-y-3">
+                                            <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                <input type="radio" name="q1" class="mr-3">
+                                                <span>Ctrl + Y</span>
+                                            </label>
+                                            <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                <input type="radio" name="q1" class="mr-3">
+                                                <span>Ctrl + Z</span>
+                                            </label>
+                                            <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                <input type="radio" name="q1" class="mr-3">
+                                                <span>Ctrl + X</span>
+                                            </label>
+                                            <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                <input type="radio" name="q1" class="mr-3">
+                                                <span>Ctrl + C</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex justify-between">
+                                        <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">上一题</button>
+                                        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">下一题</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 课件详情页 -->
+                    <div id="course-materials" class="sub-page">
+                        <div class="bg-white rounded-lg shadow-lg">
+                            <div class="p-6">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h2 class="text-2xl font-bold text-gray-800">
+                                        <i class="fas fa-folder-open text-blue-500 mr-2"></i>课件资料
+                                    </h2>
+                                    <button onclick="closeSubPage('my-courses')" class="text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-times text-xl"></i>
+                                    </button>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h3 class="font-semibold mb-4">课程文档</h3>
+                                        <div class="space-y-3">
+                                            <div class="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-file-pdf text-red-500 text-xl mr-3"></i>
+                                                    <div>
+                                                        <p class="font-semibold">第1章课件.pdf</p>
+                                                        <p class="text-sm text-gray-600">2.5MB</p>
+                                                    </div>
+                                                </div>
+                                                <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">下载</button>
+                                            </div>
+                                            <div class="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-file-powerpoint text-orange-500 text-xl mr-3"></i>
+                                                    <div>
+                                                        <p class="font-semibold">案例分析.pptx</p>
+                                                        <p class="text-sm text-gray-600">8.7MB</p>
+                                                    </div>
+                                                </div>
+                                                <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">下载</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <h3 class="font-semibold mb-4">练习素材</h3>
+                                        <div class="space-y-3">
+                                            <div class="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-image text-green-500 text-xl mr-3"></i>
+                                                    <div>
+                                                        <p class="font-semibold">练习素材包.zip</p>
+                                                        <p class="text-sm text-gray-600">15.2MB</p>
+                                                    </div>
+                                                </div>
+                                                <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">下载</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 作业列表页 -->
+            <div id="assignments" class="page">
+                <!-- 主要内容容器 -->
+                <div class="assignments-main">
+                    <div class="breadcrumb">
+                        <span class="text-white/80">首页</span>
+                        <i class="fas fa-chevron-right mx-2 text-white/60"></i>
+                        <span>作业列表</span>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold text-gray-800 mb-2">作业列表</h1>
+                        <p class="text-gray-600">管理和提交你的作业，查看批改反馈</p>
+                    </div>
+
+                    <!-- 作业分类标签 -->
+                    <div class="flex space-x-4 mb-6">
+                        <button onclick="filterAssignments('pending')" class="assignment-filter-btn px-4 py-2 bg-orange-600 text-white rounded-lg">待提交</button>
+                        <button onclick="filterAssignments('graded')" class="assignment-filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">已批改</button>
+                        <button onclick="filterAssignments('completed')" class="assignment-filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">已完成</button>
+                    </div>
+
+                    <!-- AI辅助入口 -->
+                    <div class="bg-gradient-to-r from-orange-50 to-red-50 rounded-lg p-4 mb-6">
+                        <button onclick="showSubPage('ai-assignment-help', 'assignments')" class="action-button px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+                            <i class="fas fa-magic text-purple-500 mr-2"></i>AI作业修改助手
+                        </button>
+                    </div>
+
+                    <!-- 作业卡片列表 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="assignment-list">
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden hover-scale">
+                            <div class="p-4">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h3 class="font-bold text-lg text-gray-800">品牌Logo设计</h3>
+                                    <span class="bg-red-100 text-red-600 text-xs px-2 py-1 rounded">2天后截止</span>
+                                </div>
+                                <p class="text-gray-600 text-sm mb-4">为虚拟品牌设计Logo，体现品牌特色</p>
+                                <div class="flex flex-wrap gap-2 mb-4">
+                                    <span class="text-xs bg-gray-100 px-2 py-1 rounded">PSD</span>
+                                    <span class="text-xs bg-gray-100 px-2 py-1 rounded">AI</span>
+                                    <span class="text-xs bg-gray-100 px-2 py-1 rounded">JPG</span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button onclick="showSubPage('assignment-submit', 'assignments')" class="flex-1 px-3 py-2 bg-orange-600 text-white rounded text-sm hover:bg-orange-700">
+                                        提交作业
+                                    </button>
+                                    <button onclick="showSubPage('assignment-cases', 'assignments')" class="px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50">
+                                        案例参考
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 子页面容器 -->
+                <div id="assignments-subpages">
+                    <!-- 作业提交页 -->
+                    <div id="assignment-submit" class="sub-page">
+                        <div class="bg-white rounded-lg shadow-lg">
+                            <div class="p-6">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h2 class="text-2xl font-bold text-gray-800">
+                                        <i class="fas fa-upload text-orange-500 mr-2"></i>作业提交
+                                    </h2>
+                                    <button onclick="closeSubPage('assignments')" class="text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-times text-xl"></i>
+                                    </button>
+                                </div>
+
+                                <div class="mb-6">
+                                    <h3 class="font-semibold text-gray-800 mb-3">作业信息</h3>
+                                    <div class="bg-gray-50 p-4 rounded-lg">
+                                        <p class="font-semibold">品牌Logo设计</p>
+                                        <p class="text-gray-600 text-sm">截止时间：2024年12月15日 23:59</p>
+                                        <p class="text-gray-600 text-sm">支持格式：PSD, AI, JPG, PNG, PDF</p>
+                                    </div>
+                                </div>
+
+                                <!-- 文件上传区域 -->
+                                <div class="mb-6">
+                                    <h3 class="font-semibold text-gray-800 mb-3">上传文件</h3>
+                                    <div id="upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer">
+                                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                                        <p class="text-gray-600 mb-2">拖拽文件到此处或点击上传</p>
+                                        <p class="text-sm text-gray-500 mb-4">支持格式：PSD, AI, JPG, PNG, PDF, OBJ, FBX, MP4, MOV</p>
+                                        <input type="file" id="file-input" multiple accept=".psd,.ai,.jpg,.jpeg,.png,.pdf,.obj,.fbx,.mp4,.mov" class="hidden">
+                                        <button onclick="document.getElementById('file-input').click()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">选择文件</button>
+                                    </div>
+                                    
+                                    <!-- 已上传文件列表 -->
+                                    <div id="uploaded-files" class="mt-4 space-y-2 hidden">
+                                        <!-- 文件将动态添加到这里 -->
+                                    </div>
+                                </div>
+
+                                <!-- 作业说明 -->
+                                <div class="mb-6">
+                                    <h3 class="font-semibold text-gray-800 mb-3">作业说明</h3>
+                                    <textarea id="assignment-description" placeholder="请输入作业说明..." rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                </div>
+
+                                <!-- 提交备注 -->
+                                <div class="mb-6">
+                                    <h3 class="font-semibold text-gray-800 mb-3">提交备注（可选）</h3>
+                                    <input type="text" id="assignment-note" placeholder="如：使用了新的设计技巧..." class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                                </div>
+
+                                <!-- 操作按钮 -->
+                                <div class="flex space-x-4">
+                                    <button onclick="submitAssignment()" class="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 action-button">
+                                        <i class="fas fa-check mr-2"></i>确认提交
+                                    </button>
+                                    <button onclick="saveDraft()" class="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 action-button">
+                                        <i class="fas fa-save mr-2"></i>保存草稿
+                                    </button>
+                                    <button onclick="closeSubPage('assignments')" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 action-button">
+                                        <i class="fas fa-times mr-2"></i>取消
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI作业修改页 -->
+                    <div id="ai-assignment-help" class="sub-page">
+                        <div class="bg-white rounded-lg shadow-lg">
+                            <div class="p-6">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h2 class="text-2xl font-bold text-gray-800">
+                                        <i class="fas fa-magic text-purple-500 mr-2"></i>AI作业修改助手
+                                    </h2>
+                                    <button onclick="closeSubPage('assignments')" class="text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-times text-xl"></i>
+                                    </button>
+                                </div>
+
+                                <!-- 上传文件 -->
+                                <div class="mb-6">
+                                    <h3 class="font-semibold text-gray-800 mb-3">上传作业文件</h3>
+                                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                                        <i class="fas fa-upload text-3xl text-gray-400 mb-3"></i>
+                                        <p class="text-gray-600">点击选择或拖拽文件</p>
+                                        <button onclick="document.getElementById('ai-file-input').click()" class="mt-3 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                                            选择文件
+                                        </button>
+                                        <input type="file" id="ai-file-input" class="hidden">
+                                    </div>
+                                </div>
+
+                                <!-- 修改需求 -->
+                                <div class="mb-6">
+                                    <h3 class="font-semibold text-gray-800 mb-3">修改需求</h3>
+                                    <textarea id="modification-requirements" placeholder="请描述你需要的修改方向，如：色彩调整、排版优化、细节完善等..." rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg"></textarea>
+                                </div>
+
+                                <!-- 生成选项 -->
+                                <div class="mb-6">
+                                    <h3 class="font-semibold text-gray-800 mb-3">生成选项</h3>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="preserve-elements" class="mr-3" checked>
+                                            <span>保留原设计核心元素</span>
+                                        </label>
+                                        <div>
+                                            <label class="block text-sm text-gray-600 mb-2">生成方案数量</label>
+                                            <select id="solutions-count" class="px-3 py-2 border border-gray-300 rounded-lg">
+                                                <option value="1">1套方案</option>
+                                                <option value="2">2套方案</option>
+                                                <option value="3" selected>3套方案</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 操作按钮 -->
+                                <div class="flex space-x-4">
+                                    <button onclick="generateAIVersion()" class="flex-1 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 action-button">
+                                        <i class="fas fa-magic mr-2"></i>生成修改方案
+                                    </button>
+                                    <button onclick="closeSubPage('assignments')" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 action-button">
+                                        <i class="fas fa-arrow-left mr-2"></i>返回作业列表
+                                    </button>
+                                </div>
+
+                                <!-- AI生成结果展示区 -->
+                                <div id="ai-results" class="mt-6 hidden">
+                                    <h3 class="font-semibold text-gray-800 mb-4">AI生成的修改方案</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="solutions-grid">
+                                        <!-- AI生成的方案将动态添加到这里 -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 其他学生页面继续在这里添加... -->
+        </div>
+    </div>
+
+    <!-- 教师端主容器 -->
+    <div id="teacher-container" class="page hidden">
+        <!-- 侧边栏 -->
+        <div id="teacher-sidebar" class="fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-40 transition-all duration-300">
+            <div class="p-4 border-b bg-gradient-to-r from-green-600 to-blue-600">
+                <h2 class="text-xl font-bold text-white">教师端</h2>
+                <button onclick="toggleSidebar('teacher-sidebar')" class="absolute top-4 right-2 text-white">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <nav class="p-4">
+                <div class="space-y-2">
+                    <a href="#" onclick="showPage('teacher-dashboard')" class="nav-item flex items-center p-3 rounded-lg hover:bg-green-50 transition-colors">
+                        <i class="fas fa-home w-5 mr-3 text-green-600"></i>
+                        <span class="sidebar-text">首页</span>
+                    </a>
+                    <a href="#" onclick="showPage('course-prep')" class="nav-item flex items-center p-3 rounded-lg hover:bg-green-50 transition-colors">
+                        <i class="fas fa-chalkboard w-5 mr-3 text-blue-600"></i>
+                        <span class="sidebar-text">课程备课</span>
+                    </a>
+                    <a href="#" onclick="showPage('assignment-grading')" class="nav-item flex items-center p-3 rounded-lg hover:bg-green-50 transition-colors">
+                        <i class="fas fa-graduation-cap w-5 mr-3 text-orange-600"></i>
+                        <span class="sidebar-text">作业批改</span>
+                    </a>
+                    <a href="#" onclick="showPage('student-works')" class="nav-item flex items-center p-3 rounded-lg hover:bg-green-50 transition-colors">
+                        <i class="fas fa-images w-5 mr-3 text-purple-600"></i>
+                        <span class="sidebar-text">学生作品</span>
+                    </a>
+                    <a href="#" onclick="showPage('class-management')" class="nav-item flex items-center p-3 rounded-lg hover:bg-green-50 transition-colors">
+                        <i class="fas fa-users-cog w-5 mr-3 text-indigo-600"></i>
+                        <span class="sidebar-text">班级管理</span>
+                    </a>
+                </div>
+            </nav>
+            <div class="absolute bottom-4 left-4 right-4">
+                <button onclick="logout()" class="w-full py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    <span class="sidebar-text">退出登录</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content ml-64">
+            <!-- 教师首页 -->
+            <div id="teacher-dashboard" class="page active">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">教学概览</h1>
+                    <p class="text-gray-600">管理课程进度，关注学生学习情况</p>
+                </div>
+
+                <!-- 教学数据统计 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md hover-scale">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-book text-blue-600"></i>
+                            </div>
+                            <span class="text-sm text-green-600">+2 本月</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">8</h3>
+                        <p class="text-gray-600">已发布课程</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-md hover-scale">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-clipboard-check text-orange-600"></i>
+                            </div>
+                            <span class="text-sm text-red-600">5 待批改</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">23</h3>
+                        <p class="text-gray-600">待批改作业</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-md hover-scale">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-palette text-purple-600"></i>
+                            </div>
+                            <span class="text-sm text-green-600">+12 本周</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">156</h3>
+                        <p class="text-gray-600">学生作品数</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-md hover-scale">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-users text-green-600"></i>
+                            </div>
+                            <span class="text-sm text-blue-600">活跃度 85%</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">42</h3>
+                        <p class="text-gray-600">学生总数</p>
+                    </div>
+                </div>
+
+                <!-- 快捷入口 -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">管理入口</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button onclick="showPage('course-prep')" class="action-button p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all">
+                            <i class="fas fa-chalkboard text-2xl mb-2 text-blue-600"></i>
+                            <div class="text-sm">课程管理</div>
+                        </button>
+                        <button onclick="showPage('assignment-grading')" class="action-button p-4 border border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all">
+                            <i class="fas fa-graduation-cap text-2xl mb-2 text-orange-600"></i>
+                            <div class="text-sm">作业批改</div>
+                        </button>
+                        <button onclick="showPage('student-works')" class="action-button p-4 border border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all">
+                            <i class="fas fa-images text-2xl mb-2 text-purple-600"></i>
+                            <div class="text-sm">学生作品库</div>
+                        </button>
+                        <button onclick="showPage('class-management')" class="action-button p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-all">
+                            <i class="fas fa-users-cog text-2xl mb-2 text-indigo-600"></i>
+                            <div class="text-sm">班级管理</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI辅助功能 -->
+                <div class="bg-gradient-to-r from-green-100 to-blue-100 rounded-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-magic mr-2 text-green-600"></i>AI 教学助手
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button onclick="showSubPage('ai-lesson-generator', 'teacher-dashboard')" class="bg-white p-4 rounded-lg text-left hover:shadow-md transition-shadow">
+                            <h3 class="font-semibold text-gray-800 mb-2">
+                                <i class="fas fa-file-alt text-blue-500 mr-2"></i>教案生成
+                            </h3>
+                            <p class="text-sm text-gray-600">输入课程主题，AI自动生成教学方案和案例</p>
+                        </button>
+                        <button onclick="showSubPage('ai-video-editor', 'teacher-dashboard')" class="bg-white p-4 rounded-lg text-left hover:shadow-md transition-shadow">
+                            <h3 class="font-semibold text-gray-800 mb-2">
+                                <i class="fas fa-video text-purple-500 mr-2"></i>课程高光剪辑
+                            </h3>
+                            <p class="text-sm text-gray-600">智能识别课程重点，生成精彩片段</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 教师端子页面容器 -->
+                <div id="teacher-dashboard-subpages">
+                    <!-- AI教案生成页 -->
+                    <div id="ai-lesson-generator" class="sub-page">
+                        <div class="bg-white rounded-lg shadow-lg">
+                            <div class="p-6">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h2 class="text-2xl font-bold text-gray-800">
+                                        <i class="fas fa-magic text-purple-500 mr-2"></i>AI教案生成
+                                    </h2>
+                                    <button onclick="closeSubPage('teacher-dashboard')" class="text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-times text-xl"></i>
+                                    </button>
+                                </div>
+
+                                <div class="space-y-6">
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800 mb-3">课程信息</h3>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">课程主题</label>
+                                                <input type="text" id="course-topic" placeholder="如：品牌设计基础" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">课程类型</label>
+                                                <select class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                    <option>理论课</option>
+                                                    <option>实践课</option>
+                                                    <option>案例课</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800 mb-3">教学要求</h3>
+                                        <textarea id="teaching-requirements" placeholder="请输入教学目标和要求..." rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg"></textarea>
+                                    </div>
+
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800 mb-3">生成选项</h3>
+                                        <div class="space-y-2">
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3" checked>
+                                                <span>包含案例分析</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3" checked>
+                                                <span>包含练习题</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3">
+                                                <span>生成PPT课件</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <button onclick="generateLessonPlan()" class="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 action-button">
+                                        <i class="fas fa-wand-magic-sparkles mr-2"></i>生成教案
+                                    </button>
+
+                                    <!-- 生成结果 -->
+                                    <div id="lesson-result" class="hidden">
+                                        <h3 class="font-semibold text-gray-800 mb-3">生成的教案</h3>
+                                        <div class="bg-gray-50 p-4 rounded-lg">
+                                            <div id="lesson-content">
+                                                <!-- 教案内容将动态生成 -->
+                                            </div>
+                                            <div class="flex space-x-2 mt-4">
+                                                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                                                    <i class="fas fa-download mr-2"></i>下载教案
+                                                </button>
+                                                <button class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+                                                    <i class="fas fa-edit mr-2"></i>编辑
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 其他教师页面... -->
+        </div>
+    </div>
+
+    <!-- 通用弹窗 -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-xl font-bold text-gray-800">标题</h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modal-content" class="text-gray-600">
+                <!-- 动态内容 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局状态管理
+        let currentUser = null;
+        let currentRole = null;
+        let selectedRole = null;
+        let currentMainPage = null;
+        let pageStack = [];
+
+        // 页面切换
+        function showPage(pageId) {
+            console.log('切换到主页面:', pageId);
+            
+            // 隐藏所有主容器
+            document.getElementById('startup-page').style.display = 'none';
+            document.getElementById('startup-page').classList.remove('active');
+            document.getElementById('student-container').style.display = 'none';
+            document.getElementById('student-container').classList.remove('active');
+            document.getElementById('teacher-container').style.display = 'none';
+            document.getElementById('teacher-container').classList.remove('active');
+            
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+                page.style.display = 'none';
+            });
+            
+            // 显示目标页面
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+                targetPage.style.display = 'block';
+                currentMainPage = pageId;
+                console.log('成功显示页面:', pageId);
+            } else {
+                console.error('找不到页面:', pageId);
+                showNotification('页面不存在', 'error');
+                return;
+            }
+            
+            // 显示对应容器
+            if (pageId.startsWith('student-') || pageId === 'student-dashboard' || 
+                pageId === 'my-courses' || pageId === 'assignments' || 
+                pageId === 'portfolio' || pageId === 'competitions' || 
+                pageId === 'my-class' || pageId === 'group-room') {
+                document.getElementById('student-container').style.display = 'block';
+                document.getElementById('student-container').classList.add('active');
+            } else if (pageId.startsWith('teacher-') || pageId === 'teacher-dashboard' || 
+                       pageId === 'course-prep' || pageId === 'assignment-grading' || 
+                       pageId === 'student-works' || pageId === 'class-management') {
+                document.getElementById('teacher-container').style.display = 'block';
+                document.getElementById('teacher-container').classList.add('active');
+            }
+        }
+
+        // 显示子页面
+        function showSubPage(subPageId, parentPageId) {
+            console.log('显示子页面:', subPageId, '父页面:', parentPageId);
+            
+            // 隐藏所有子页面
+            document.querySelectorAll('.sub-page').forEach(page => {
+                page.classList.remove('active');
+                page.style.display = 'none';
+            });
+            
+            // 隐藏父页面的主要内容
+            const parentPage = document.getElementById(parentPageId);
+            if (parentPage) {
+                // 查找主要内容容器（以 -main 结尾的类名）
+                const mainContent = parentPage.querySelector('[class$="-main"]');
+                if (mainContent) {
+                    mainContent.style.display = 'none';
+                } else {
+                    // 备用方案：查找第一个非子页面的直接子元素
+                    for (let child of parentPage.children) {
+                        if (!child.classList.contains('sub-page')) {
+                            child.style.display = 'none';
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // 显示目标子页面
+            const targetSubPage = document.getElementById(subPageId);
+            if (targetSubPage) {
+                targetSubPage.classList.add('active');
+                targetSubPage.style.display = 'block';
+                
+                // 添加动画效果
+                targetSubPage.style.opacity = '0';
+                targetSubPage.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    targetSubPage.style.transition = 'all 0.3s ease';
+                    targetSubPage.style.opacity = '1';
+                    targetSubPage.style.transform = 'translateY(0)';
+                }, 50);
+            } else {
+                console.error('找不到子页面:', subPageId);
+                showNotification('页面不存在', 'error');
+            }
+        }
+
+        // 关闭子页面
+        function closeSubPage(parentPageId) {
+            console.log('关闭子页面，返回:', parentPageId);
+            
+            // 隐藏所有子页面
+            document.querySelectorAll('.sub-page').forEach(page => {
+                page.classList.remove('active');
+                page.style.display = 'none';
+            });
+            
+            // 显示父页面的主要内容
+            const parentPage = document.getElementById(parentPageId);
+            if (parentPage) {
+                // 查找主要内容容器（以 -main 结尾的类名）
+                const mainContent = parentPage.querySelector('[class$="-main"]');
+                if (mainContent) {
+                    mainContent.style.display = 'block';
+                } else {
+                    // 备用方案：查找第一个非子页面的直接子元素
+                    for (let child of parentPage.children) {
+                        if (!child.classList.contains('sub-page')) {
+                            child.style.display = 'block';
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 身份选择
+        function selectRole(role) {
+            selectedRole = role;
+            document.querySelectorAll('.role-btn').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'bg-blue-50', 'border-green-500', 'bg-green-50', 'border-purple-500', 'bg-purple-50');
+            });
+            
+            event.target.closest('.role-btn').classList.add(
+                role === 'student' ? 'border-blue-500 bg-blue-50' :
+                role === 'teacher' ? 'border-green-500 bg-green-50' :
+                'border-purple-500 bg-purple-50'
+            );
+        }
+
+        // 登录功能
+        function login() {
+            console.log('登录函数被调用');
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            console.log('用户名:', username, '密码:', password, '选择的角色:', selectedRole);
+            
+            if (!selectedRole) {
+                showNotification('请先选择身份', 'error');
+                return;
+            }
+            
+            if (!username || !password) {
+                showNotification('请输入用户名和密码', 'error');
+                return;
+            }
+            
+            // 模拟登录成功
+            currentUser = { username, role: selectedRole };
+            currentRole = selectedRole;
+            
+            // 隐藏启动页
+            const startupPage = document.getElementById('startup-page');
+            startupPage.style.display = 'none';
+            startupPage.classList.remove('active');
+            
+            // 跳转到对应页面
+            if (selectedRole === 'student') {
+                const studentContainer = document.getElementById('student-container');
+                studentContainer.style.display = 'block';
+                studentContainer.classList.add('active');
+                showPage('student-dashboard');
+                console.log('跳转到学生端');
+            } else if (selectedRole === 'teacher') {
+                const teacherContainer = document.getElementById('teacher-container');
+                teacherContainer.style.display = 'block';
+                teacherContainer.classList.add('active');
+                showPage('teacher-dashboard');
+                console.log('跳转到教师端');
+            } else if (selectedRole === 'ai') {
+                showNotification('AI助教功能正在开发中', 'info');
+                return;
+            }
+            
+            showNotification('登录成功！欢迎' + username, 'success');
+            console.log('登录成功');
+        }
+
+        // 退出登录
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                currentUser = null;
+                currentRole = null;
+                selectedRole = null;
+                document.getElementById('student-container').classList.remove('active');
+                document.getElementById('teacher-container').classList.remove('active');
+                showPage('startup-page');
+                showNotification('已退出登录', 'success');
+            }
+        }
+
+        // 侧边栏切换
+        function toggleSidebar(sidebarId) {
+            const sidebar = document.getElementById(sidebarId);
+            sidebar.classList.toggle('sidebar-collapsed');
+            const mainContent = sidebar.nextElementSibling;
+            if (sidebar.classList.contains('sidebar-collapsed')) {
+                mainContent.style.marginLeft = '60px';
+            } else {
+                mainContent.style.marginLeft = '256px';
+            }
+        }
+
+        // 选课功能
+        function enrollCourse() {
+            showNotification('选课成功！已加入我的课程', 'success');
+        }
+
+        // 文件上传处理
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置初始页面
+            showPage('startup-page');
+            
+            // 文件上传区域事件处理
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+            const uploadedFiles = document.getElementById('uploaded-files');
+            
+            if (uploadArea && fileInput) {
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('border-blue-400', 'bg-blue-50');
+                });
+                
+                uploadArea.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('border-blue-400', 'bg-blue-50');
+                });
+                
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('border-blue-400', 'bg-blue-50');
+                    handleFiles(e.dataTransfer.files);
+                });
+                
+                fileInput.addEventListener('change', (e) => {
+                    handleFiles(e.target.files);
+                });
+            }
+            
+            function handleFiles(files) {
+                if (files.length === 0) return;
+                
+                uploadedFiles.classList.remove('hidden');
+                uploadedFiles.innerHTML = '<h4 class="font-semibold mb-2">已上传文件：</h4>';
+                
+                Array.from(files).forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                    fileItem.innerHTML = `
+                        <div class="flex items-center">
+                            <i class="fas fa-file text-blue-500 mr-3"></i>
+                            <div>
+                                <p class="font-semibold">${file.name}</p>
+                                <p class="text-sm text-gray-600">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                            </div>
+                        </div>
+                        <button onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-700">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    uploadedFiles.appendChild(fileItem);
+                });
+                
+                showNotification(`成功上传 ${files.length} 个文件`, 'success');
+            }
+        });
+
+        // 作业提交
+        function submitAssignment() {
+            const description = document.getElementById('assignment-description').value;
+            const note = document.getElementById('assignment-note').value;
+            const uploadedFiles = document.querySelectorAll('#uploaded-files .flex');
+            
+            if (uploadedFiles.length === 0) {
+                showNotification('请先上传作业文件', 'error');
+                return;
+            }
+            
+            showNotification('作业提交成功！', 'success');
+            setTimeout(() => {
+                closeSubPage('assignments');
+                // 清空表单
+                document.getElementById('assignment-description').value = '';
+                document.getElementById('assignment-note').value = '';
+                document.getElementById('uploaded-files').innerHTML = '';
+                document.getElementById('uploaded-files').classList.add('hidden');
+            }, 1500);
+        }
+
+        // 保存草稿
+        function saveDraft() {
+            showNotification('草稿已保存', 'success');
+            setTimeout(() => closeSubPage('assignments'), 1000);
+        }
+
+        // AI生成修改方案
+        function generateAIVersion() {
+            const requirements = document.getElementById('modification-requirements').value;
+            const solutionsCount = document.getElementById('solutions-count').value;
+            const preserveElements = document.getElementById('preserve-elements').checked;
+            
+            if (!requirements) {
+                showNotification('请填写修改需求', 'error');
+                return;
+            }
+            
+            showNotification('AI正在生成修改方案...', 'info');
+            
+            setTimeout(() => {
+                const resultsDiv = document.getElementById('ai-results');
+                const solutionsGrid = document.getElementById('solutions-grid');
+                
+                resultsDiv.classList.remove('hidden');
+                solutionsGrid.innerHTML = '';
+                
+                for (let i = 1; i <= parseInt(solutionsCount); i++) {
+                    const solution = document.createElement('div');
+                    solution.className = 'bg-white border rounded-lg overflow-hidden hover-scale';
+                    solution.innerHTML = `
+                        <img src="https://via.placeholder.com/200x150?text=方案${i}" alt="修改方案${i}" class="w-full h-32 object-cover">
+                        <div class="p-4">
+                            <h4 class="font-semibold mb-2">修改方案 ${i}</h4>
+                            <p class="text-sm text-gray-600 mb-3">AI根据您的需求生成的优化方案</p>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                                    <i class="fas fa-download mr-1"></i>下载
+                                </button>
+                                <button class="px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50">
+                                    <i class="fas fa-eye mr-1"></i>预览
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    solutionsGrid.appendChild(solution);
+                }
+                
+                showNotification('修改方案生成完成！', 'success');
+                // 滚动到结果区域
+                resultsDiv.scrollIntoView({ behavior: 'smooth' });
+            }, 3000);
+        }
+
+        // 生成测验
+        function generateQuiz() {
+            showNotification('AI正在生成测验题目...', 'info');
+            setTimeout(() => {
+                showNotification('测验生成完成！', 'success');
+                // 这里可以动态添加更多题目
+            }, 2000);
+        }
+
+        // 生成教案
+        function generateLessonPlan() {
+            const topic = document.getElementById('course-topic').value;
+            const requirements = document.getElementById('teaching-requirements').value;
+            
+            if (!topic) {
+                showNotification('请输入课程主题', 'error');
+                return;
+            }
+            
+            showNotification('AI正在生成教案...', 'info');
+            
+            setTimeout(() => {
+                const resultDiv = document.getElementById('lesson-result');
+                const contentDiv = document.getElementById('lesson-content');
+                
+                contentDiv.innerHTML = `
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-bold text-lg mb-2">${topic} - 教学大纲</h4>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h5 class="font-semibold mb-2">教学目标</h5>
+                                <ul class="text-sm space-y-1">
+                                    <li>• 理解${topic}的基本概念</li>
+                                    <li>• 掌握核心技能和方法</li>
+                                    <li>• 能够独立完成相关项目</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h5 class="font-semibold mb-2">教学内容</h5>
+                                <ul class="text-sm space-y-1">
+                                    <li>• 第1章：基础理论介绍</li>
+                                    <li>• 第2章：实践案例分析</li>
+                                    <li>• 第3章：项目实战练习</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold mb-2">教学方法</h5>
+                            <p class="text-sm">理论讲解 + 案例分析 + 实践操作 + 小组讨论</p>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold mb-2">评估方式</h5>
+                            <p class="text-sm">课堂表现(30%) + 作业完成(40%) + 期末项目(30%)</p>
+                        </div>
+                    </div>
+                `;
+                
+                resultDiv.classList.remove('hidden');
+                showNotification('教案生成成功！', 'success');
+            }, 2500);
+        }
+
+        // 过滤功能
+        function filterCourses(type) {
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            event.target.classList.remove('bg-gray-200', 'text-gray-700');
+            event.target.classList.add('bg-blue-600', 'text-white');
+            
+            showNotification(`切换到${type === 'tools' ? '工具实操课' : type === 'project' ? '项目式课程' : '理论课程'}`, 'info');
+        }
+
+        function filterAssignments(type) {
+            document.querySelectorAll('.assignment-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-orange-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            event.target.classList.remove('bg-gray-200', 'text-gray-700');
+            event.target.classList.add('bg-orange-600', 'text-white');
+            
+            const statusText = type === 'pending' ? '待提交' : type === 'graded' ? '已批改' : '已完成';
+            showNotification(`显示${statusText}作业`, 'info');
+        }
+
+        // 显示AI助教
+        function showAIAssistant() {
+            showModal('AI助教答疑', `
+                <div class="space-y-4">
+                    <input type="text" placeholder="搜索设计案例或理论..." class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                    <div class="space-y-2">
+                        <div class="p-3 bg-blue-50 rounded-lg">
+                            <p class="text-sm"><strong>推荐问题：</strong> 如何设计出吸引人的海报？</p>
+                        </div>
+                        <div class="p-3 bg-green-50 rounded-lg">
+                            <p class="text-sm"><strong>推荐课程：</strong> 色彩搭配理论基础</p>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        开始对话
+                    </button>
+                </div>
+            `);
+        }
+
+        // 显示学案整理
+        function showStudyPlan() {
+            showModal('学案整理', `
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-semibold mb-2">课程学习大纲</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i>第1章：设计基础理论</li>
+                            <li class="flex items-center"><i class="fas fa-circle text-yellow-500 mr-2"></i>第2章：色彩搭配原理</li>
+                            <li class="flex items-center"><i class="far fa-circle text-gray-400 mr-2"></i>第3章：版式设计技巧</li>
+                        </ul>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">查看详情</button>
+                        <button class="flex-1 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">导出PDF</button>
+                    </div>
+                </div>
+            `);
+        }
+
+        // 通知功能
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : 
+                           type === 'error' ? 'bg-red-500' : 
+                           'bg-blue-500';
+            
+            notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+            notification.style.zIndex = '9999';
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // 模态框功能
+        function showModal(title, content) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-content').innerHTML = content;
+            document.getElementById('modal-overlay').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+
+        // 绑定ESC键关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+        
+        // 点击模态框外部关闭
+        document.getElementById('modal-overlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

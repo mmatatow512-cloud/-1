@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自主AI测验 - 设计学科线上课程系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            color: white;
+        }
+        .glass-navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .glass-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .primary-button {
+            background: rgba(139, 92, 246, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .primary-button:hover {
+            background: rgba(139, 92, 246, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(139, 92, 246, 0.4);
+        }
+        .action-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.4);
+        }
+        .danger-button {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .danger-button:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px 0 rgba(239, 68, 68, 0.4);
+        }
+        .message-info {
+            background: rgba(165, 243, 252, 0.2);
+            border: 1px solid rgba(165, 243, 252, 0.3);
+            color: white;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- 页面导航 -->
+    <nav class="glass-navbar navbar-expand-lg">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand text-white font-bold text-xl" href="{{ url_for('dashboard') }}">
+                <i class="fas fa-graduation-cap mr-2"></i>设计学科线上课程系统
+            </a>
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link text-white/90 hover:text-white px-3" href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-user-circle mr-1"></i>个人中心
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white/90 hover:text-white px-3" href="{{ url_for('courses') }}">
+                            <i class="fas fa-book mr-1"></i>我的课程
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white/90 hover:text-white px-3" href="{{ url_for('assignments') }}">
+                            <i class="fas fa-file-alt mr-1"></i>我的作业
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white bg-white/10 px-3 rounded-lg" aria-current="page" href="{{ url_for('student_self_quiz') }}">
+                            <i class="fas fa-robot mr-1"></i>自主AI测验
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user mr-1"></i>{{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-right glass-card border-0">
+                            <li><a class="dropdown-item text-white/90 hover:text-white" href="{{ url_for('dashboard') }}"><i class="fas fa-user-circle mr-2"></i>个人中心</a></li>
+                            <li><hr class="dropdown-divider border-white/20"></li>
+                            <li><a class="dropdown-item text-white/90 hover:text-red-300" href="{{ url_for('login') }}"><i class="fas fa-sign-out-alt mr-2"></i>退出登录</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- 页面标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-3">自主AI测验</h1>
+            <p class="text-xl text-white/80">选择测验参数，生成个性化AI测验</p>
+        </div>
+        
+        <!-- 自主测验表单 -->
+        <div class="glass-card p-8">
+            <form action="{{ url_for('student_generate_self_quiz') }}" method="POST">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 知识点选择 -->
+                    <div>
+                        <label for="knowledge_points" class="block text-white font-medium mb-2">
+                            <i class="fas fa-lightbulb text-yellow-300 mr-2"></i>知识点
+                        </label>
+                        <input type="text" class="glass-input w-full px-4 py-3" id="knowledge_points" name="knowledge_points" placeholder="例如：Python基础,算法,数据库" value="Python基础">
+                    </div>
+                    
+                    <!-- 难度选择 -->
+                    <div>
+                        <label for="difficulty" class="block text-white font-medium mb-2">
+                            <i class="fas fa-sliders-h text-blue-300 mr-2"></i>难度
+                        </label>
+                        <select class="glass-input w-full px-4 py-3" id="difficulty" name="difficulty">
+                            <option value="简单">简单</option>
+                            <option value="中等" selected>中等</option>
+                            <option value="困难">困难</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-6">
+                    <!-- 单选题数量 -->
+                    <div>
+                        <label for="single_count" class="block text-white font-medium mb-2">
+                            <i class="fas fa-circle text-green-300 mr-2"></i>单选题数量
+                        </label>
+                        <input type="number" class="glass-input w-full px-4 py-3" id="single_count" name="single_count" min="0" max="10" value="2">
+                    </div>
+                    
+                    <!-- 多选题数量 -->
+                    <div>
+                        <label for="multiple_count" class="block text-white font-medium mb-2">
+                            <i class="fas fa-check-square text-purple-300 mr-2"></i>多选题数量
+                        </label>
+                        <input type="number" class="glass-input w-full px-4 py-3" id="multiple_count" name="multiple_count" min="0" max="10" value="1">
+                    </div>
+                    
+                    <!-- 判断题数量 -->
+                    <div>
+                        <label for="judge_count" class="block text-white font-medium mb-2">
+                            <i class="fas fa-balance-scale text-yellow-300 mr-2"></i>判断题数量
+                        </label>
+                        <input type="number" class="glass-input w-full px-4 py-3" id="judge_count" name="judge_count" min="0" max="10" value="1">
+                    </div>
+                    
+                    <!-- 简答题数量 -->
+                    <div>
+                        <label for="short_count" class="block text-white font-medium mb-2">
+                            <i class="fas fa-pencil-alt text-blue-300 mr-2"></i>简答题数量
+                        </label>
+                        <input type="number" class="glass-input w-full px-4 py-3" id="short_count" name="short_count" min="0" max="10" value="1">
+                    </div>
+                </div>
+                
+                <!-- 时间限制 -->
+                <div class="mt-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="time_limit" class="block text-white font-medium mb-2">
+                                <i class="fas fa-clock text-red-300 mr-2"></i>时间限制（分钟）
+                            </label>
+                            <input type="number" class="glass-input w-full px-4 py-3" id="time_limit" name="time_limit" min="5" max="120" value="30">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 提交按钮 -->
+                <div class="mt-8 text-center">
+                    <button type="submit" class="primary-button px-8 py-3 text-lg font-medium flex items-center mx-auto">
+                        <i class="fas fa-robot mr-2"></i>生成AI测验
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- 提示信息 -->
+        <div class="message-info p-6 mt-8">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-info-circle text-blue-300 text-2xl mr-3"></i>
+                <h4 class="text-white text-xl font-semibold">使用说明</h4>
+            </div>
+            <ul class="space-y-2">
+                <li class="flex items-start">
+                    <i class="fas fa-check-circle text-green-300 mt-1 mr-3"></i>
+                    <span class="text-white/90">可以选择多个知识点，用逗号分隔</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-check-circle text-green-300 mt-1 mr-3"></i>
+                    <span class="text-white/90">根据需要调整不同题型的数量</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-check-circle text-green-300 mt-1 mr-3"></i>
+                    <span class="text-white/90">建议时间限制为每道题2-3分钟</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-check-circle text-green-300 mt-1 mr-3"></i>
+                    <span class="text-white/90">生成的测验将包含AI智能评分功能</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-check-circle text-green-300 mt-1 mr-3"></i>
+                    <span class="text-white/90">测验完成后可以查看详细的答题分析</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
